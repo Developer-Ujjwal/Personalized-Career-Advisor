@@ -1,0 +1,11 @@
+fastapi[standard]
+google-adk
+uvicorn
+passlib
+python-jose[cryptography]
+python-multipart
+google-generativeai
+transformers
+pydantic
+bcrypt
+python-dotenv
