@@ -95,15 +95,22 @@ class DynamicCareerGuidanceAgent:
           print("Error extracting profile information:", e)
 
 
-    def generate_recommendations(self, user_profile: dict) -> str:
-        """Generate career recommendations based on the user profile"""
+    def generate_recommendations(self, user_profile: dict, personality_type: str = None) -> str:
+        """Generate career recommendations based on the user profile and personality type"""
         try:
             prompt = f"""
-            Based on the following user profile, suggest 3-5 suitable career paths with explanations:
-
+            Based on the following user profile and personality type, suggest 3-5 suitable career paths that align with both their skills/interests and personality characteristics.
+            
             User Profile:
             {json.dumps(user_profile, indent=2)}
+            
+            Personality Type: {personality_type}
 
+            Consider both the user's profile attributes and their personality type when making recommendations.
+            For each career suggestion, explain why it's suitable based on:
+            1. Their skills and interests
+            2. How their personality type would be an asset in this career
+            
             Return strictly in this JSON schema
             """
 

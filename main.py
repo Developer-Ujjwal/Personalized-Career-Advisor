@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Dict, List, Optional
+from typing import Dict
 import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
@@ -56,9 +56,10 @@ class CareerGuidanceRouter:
         db_user = User(
             username=user.username,
             email=user.email,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            personality_type=user.personality_type
         )
-        db_user.conversation_history.append({"role": "system", "parts": [self.agent.system_prompt]})
+        db_user.conversation_history.append({"role": "system", "parts": [self.agent.system_prompt, "The personality type of the User is: " + user.personality_type]})
         users_db[user.username] = db_user
         return {"message": "User created successfully"}
 
@@ -97,7 +98,10 @@ class CareerGuidanceRouter:
         
         # Generate next question or recommendations
         if len(current_user.conversation_history) >= 10:
-            recommendations = self.agent.generate_recommendations(current_user.user_profile)
+            recommendations = self.agent.generate_recommendations(
+                current_user.user_profile,
+                current_user.personality_type
+            )
             return recommendations
         
         next_question = self.agent.generate_question(current_user.conversation_history)
