@@ -1,8 +1,9 @@
 import google.generativeai as genai
-from model import Profile, CareerRecommendationsResponse
+from model import Profile, CareerRecommendationsResponse, CareerKeywordsResponse
 import json
 import random
 from setup import model
+from trends import CareerTrendAnalyzer
 
 
 class DynamicCareerGuidanceAgent:
@@ -21,7 +22,9 @@ class DynamicCareerGuidanceAgent:
         careers that align with their unique combination of traits and aspirations.
         """
 
-    def generate_question(self, conversation_history: list) -> str:
+        self.trend_analyzer = CareerTrendAnalyzer()
+
+    def generate_question(self, conversation_history: list, personality_type: str) -> str:
         """Generate a dynamic question based on conversation history using Gemini"""
         try:
             # Create prompt for question generation
@@ -31,6 +34,7 @@ class DynamicCareerGuidanceAgent:
                 "The question should be open-ended and encourage thoughtful responses.",
                 "Conversation history:",
                 str(conversation_history),
+                "Personality Type of the User is: " + personality_type,
                 "Generate just the question without any additional text:"
             ]
 
@@ -94,38 +98,82 @@ class DynamicCareerGuidanceAgent:
         except Exception as e:
           print("Error extracting profile information:", e)
 
-
-    def generate_recommendations(self, user_profile: dict, personality_type: str = None) -> str:
-        """Generate career recommendations based on the user profile and personality type"""
+    def extract_career_keywords(self, user_profile: dict):
+        """Use Gemini to map profile into concrete career/skill keywords for trend analysis"""
         try:
             prompt = f"""
-            Based on the following user profile and personality type, suggest 3-5 suitable career paths that align with both their skills/interests and personality characteristics.
-            
+            Based on the following user profile, suggest 5-7 specific career roles or skills 
+            that can be checked against market demand trends. 
+            Return only a JSON array of career keywords.
+
             User Profile:
             {json.dumps(user_profile, indent=2)}
-            
-            Personality Type: {personality_type}
-
-            Consider both the user's profile attributes and their personality type when making recommendations.
-            For each career suggestion, explain why it's suitable based on:
-            1. Their skills and interests
-            2. How their personality type would be an asset in this career
-            
-            Return strictly in this JSON schema
             """
 
             response = model.generate_content(
                 prompt,
                 generation_config=genai.GenerationConfig(
                 response_mime_type="application/json",
-                response_schema=CareerRecommendationsResponse)
-            )
-             
-            recommendations= json.loads(response.text)
-            return recommendations
-
+                response_schema=CareerKeywordsResponse))
+            print(response.text)
+            return json.loads(response.text)
 
         except Exception as e:
+            print("Error extracting career keywords:", e)
+            return []
+
+    def generate_recommendations(self, user_profile: dict, personality_type: str = None) -> str:
+        """Generate career recommendations based on the user profile and personality type"""
+        try:
+            print(f"User Profile: {user_profile}")
+            print(f"Personality type: {personality_type}")
+            career_keywords = self.extract_career_keywords(user_profile)
+            trending_info = self.trend_analyzer.analyze_career_demand(career_keywords) 
+            print(trending_info)
+            prompt = f"""
+            Based on the following user profile and personality type, suggest 3-5 suitable career paths that align with both their skills/interests and personality characteristics.
+            
+            User Profile:
+            {json.dumps(user_profile, indent=2)}
+        
+                    
+            Personality Type: 
+            {personality_type}
+        
+            Career Demand Trends (from Google Trends or related data):
+            {json.dumps(trending_info, indent=2)}
+        
+            Your recommendations should balance:
+            1. Personal fit based on their skills and interests
+            2. Personality type alignment
+            3. Current market demand from the trend data
+            Return strictly in this JSON schema
+            """
+        
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    response_schema=CareerRecommendationsResponse)
+            )
+            if response is None or response.text is None:
+                raise Exception("No response from Gemini")
+            elif not response.text.startswith('{') or not response.text.endswith('}'):
+                raise Exception("Invalid JSON response from Gemini")
+            else:
+                recommendations = json.loads(response.text)
+        
+            print(recommendations)
+        
+            return recommendations
+        
+        except Exception as e:
+            if "No response from Gemini" in str(e):
+                print("Gemini did not return any response")
+            elif "Invalid JSON response from Gemini" in str(e):
+                print("Gemini returned an invalid JSON response")
+            else:
+                print("An error occurred:", e)
             return "I apologize, but I'm having trouble generating recommendations at the moment. Please try again later."
 
 if __name__ == "__main__":

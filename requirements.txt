@@ -9,3 +9,4 @@ transformers
 pydantic
 bcrypt
 python-dotenv
+pytrends

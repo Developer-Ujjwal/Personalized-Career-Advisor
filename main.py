@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Dict
@@ -57,15 +57,14 @@ class CareerGuidanceRouter:
             username=user.username,
             email=user.email,
             hashed_password=hashed_password,
-            personality_type=user.personality_type
         )
-        db_user.conversation_history.append({"role": "system", "parts": [self.agent.system_prompt, "The personality type of the User is: " + user.personality_type]})
+        db_user.conversation_history.append({"role": "system", "parts": [self.agent.system_prompt]})
         users_db[user.username] = db_user
         return {"message": "User created successfully"}
 
     async def get_next_question(self, current_user: User = Depends(get_current_user)):
         # Generate next question based on user's conversation history
-        question = self.agent.generate_question(current_user.conversation_history)
+        question = self.agent.generate_question(current_user.conversation_history, current_user.personality_type)
         current_user.conversation_history.append({
             "role": "user",
             "parts": [question]
@@ -104,7 +103,7 @@ class CareerGuidanceRouter:
             )
             return recommendations
         
-        next_question = self.agent.generate_question(current_user.conversation_history)
+        next_question = self.agent.generate_question(current_user.conversation_history, current_user.personality_type)
         current_user.conversation_history.append({
             "role": "user",
             "parts": [next_question]
@@ -147,3 +146,8 @@ async def submit_answer(
 @app.get("/profile")
 async def get_profile(current_user: User = Depends(career_router.get_current_user)):
     return current_user.user_profile
+
+@app.post("/personality_type")
+async def set_personality_type(personality_type: str = Body(...), current_user: User = Depends(career_router.get_current_user)):
+    current_user.personality_type = personality_type
+    return {"message": "Personality type set successfully"}

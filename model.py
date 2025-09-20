@@ -20,6 +20,9 @@ class CareerRecommendationsResponse(BaseModel):
     recommendations: List[CareerRecommendation]
     additional_advice: str
 
+class CareerKeywordsResponse(BaseModel):
+    keywords: List[str]
+
 # User models
 class User(BaseModel):
     username: str
@@ -35,15 +38,14 @@ class User(BaseModel):
         "experience_level": "",
         "dislikes": []
     }
-    personality_type: str
+    personality_type: str=""
     career_recommendations: List[Dict] = []
-    additional_advice: str
+    additional_advice: str=""
 
 class UserCreate(BaseModel):
     username: str
     email: str
     password: str
-    personality_type: str
 
 class UserResponse(BaseModel):
     question: str
