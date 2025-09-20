@@ -12,6 +12,7 @@ interface QuizQuestion {
   id: number
   statement: string
   category: string
+  reverse?: boolean // For reverse-scored items
 }
 
 interface PersonalityResult {
@@ -19,77 +20,126 @@ interface PersonalityResult {
   title: string
   description: string
   traits: string[]
+  scores: Record<string, number>
 }
 
 const quizQuestions: QuizQuestion[] = [
-  { id: 1, statement: "I enjoy being the center of attention at social gatherings", category: "extraversion" },
-  { id: 2, statement: "I prefer to work with concrete facts rather than abstract theories", category: "sensing" },
-  { id: 3, statement: "I make decisions based on logic rather than emotions", category: "thinking" },
-  { id: 4, statement: "I like to have a clear plan and stick to it", category: "judging" },
-  { id: 5, statement: "I feel energized after spending time with groups of people", category: "extraversion" },
-  { id: 6, statement: "I focus on details and practical applications", category: "sensing" },
-  { id: 7, statement: "I value efficiency and objective analysis", category: "thinking" },
-  { id: 8, statement: "I prefer structure and organization in my daily life", category: "judging" },
-  { id: 9, statement: "I often think out loud and process ideas by talking", category: "extraversion" },
-  { id: 10, statement: "I trust my intuition and gut feelings about situations", category: "intuition" },
-  { id: 11, statement: "I consider how decisions will affect people's feelings", category: "feeling" },
-  { id: 12, statement: "I enjoy keeping my options open and being spontaneous", category: "perceiving" },
-  { id: 13, statement: "I prefer one-on-one conversations over group discussions", category: "introversion" },
-  { id: 14, statement: "I enjoy exploring possibilities and future potential", category: "intuition" },
-  { id: 15, statement: "I prioritize harmony and consider others' perspectives", category: "feeling" },
-  { id: 16, statement: "I adapt easily to changing circumstances", category: "perceiving" },
+  // Honesty-Humility
+  {
+    id: 1,
+    statement: "I would be tempted to buy stolen property if I were financially tight",
+    category: "honesty",
+    reverse: true,
+  },
+  { id: 2, statement: "I would never accept a bribe, even if it were very large", category: "honesty" },
+  {
+    id: 3,
+    statement: "I wouldn't use flattery to get a raise or promotion at work, even if I thought it would succeed",
+    category: "honesty",
+  },
+
+  // Emotionality
+  { id: 4, statement: "I would feel afraid if I had to travel in bad weather conditions", category: "emotionality" },
+  { id: 5, statement: "I worry a lot less than most people do", category: "emotionality", reverse: true },
+  { id: 6, statement: "I feel reasonably satisfied with myself overall", category: "emotionality", reverse: true },
+
+  // eXtraversion
+  { id: 7, statement: "I feel comfortable approaching someone I find attractive", category: "extraversion" },
+  { id: 8, statement: "I enjoy having lots of people around to talk with", category: "extraversion" },
+  {
+    id: 9,
+    statement: "I prefer jobs that involve active social interaction to those that involve working alone",
+    category: "extraversion",
+  },
+
+  // Agreeableness
+  {
+    id: 10,
+    statement: "I rarely hold a grudge, even against people who have badly wronged me",
+    category: "agreeableness",
+  },
+  {
+    id: 11,
+    statement: "I am usually quite flexible in my opinions when people disagree with me",
+    category: "agreeableness",
+  },
+  { id: 12, statement: "I tend to be lenient in judging other people", category: "agreeableness" },
+
+  // Conscientiousness
+  {
+    id: 13,
+    statement: "I plan ahead and organize things, to avoid scrambling at the last minute",
+    category: "conscientiousness",
+  },
+  { id: 14, statement: "I often push myself very hard when trying to achieve a goal", category: "conscientiousness" },
+  {
+    id: 15,
+    statement: "I do only the minimum amount of work needed to get by",
+    category: "conscientiousness",
+    reverse: true,
+  },
+
+  // Openness to Experience
+  {
+    id: 16,
+    statement: "I would enjoy creating a work of art, such as a novel, a song, or a painting",
+    category: "openness",
+  },
+  {
+    id: 17,
+    statement: "I think that paying attention to radical ideas is a waste of time",
+    category: "openness",
+    reverse: true,
+  },
+  { id: 18, statement: "I like people who have unconventional views", category: "openness" },
 ]
 
-const personalityTypes: Record<string, PersonalityResult> = {
-  ENTJ: {
-    type: "ENTJ",
-    title: "The Executive",
-    description: "Natural-born leaders who are strategic, organized, and driven to achieve their goals.",
-    traits: ["Strategic thinking", "Leadership", "Goal-oriented", "Decisive"],
-  },
-  ENFJ: {
-    type: "ENFJ",
-    title: "The Protagonist",
-    description: "Charismatic and inspiring leaders who are passionate about helping others reach their potential.",
-    traits: ["Empathetic", "Inspiring", "Organized", "People-focused"],
-  },
-  INTJ: {
-    type: "INTJ",
-    title: "The Architect",
-    description: "Independent and strategic thinkers who love to solve complex problems and create systems.",
-    traits: ["Strategic", "Independent", "Analytical", "Visionary"],
-  },
-  INFJ: {
-    type: "INFJ",
-    title: "The Advocate",
-    description: "Creative and insightful individuals who are driven by their values and desire to help others.",
-    traits: ["Insightful", "Creative", "Principled", "Altruistic"],
-  },
-  ESTP: {
-    type: "ESTP",
-    title: "The Entrepreneur",
-    description:
-      "Energetic and adaptable individuals who thrive in dynamic environments and love hands-on experiences.",
-    traits: ["Adaptable", "Energetic", "Practical", "Spontaneous"],
-  },
-  ESFP: {
-    type: "ESFP",
-    title: "The Entertainer",
-    description: "Enthusiastic and creative individuals who love to inspire and entertain others.",
-    traits: ["Enthusiastic", "Creative", "People-oriented", "Flexible"],
-  },
-  ISTP: {
-    type: "ISTP",
-    title: "The Virtuoso",
-    description: "Practical and analytical individuals who excel at understanding how things work.",
-    traits: ["Practical", "Analytical", "Independent", "Adaptable"],
-  },
-  ISFP: {
-    type: "ISFP",
-    title: "The Adventurer",
-    description: "Gentle and creative individuals who are driven by their values and love for beauty.",
-    traits: ["Creative", "Gentle", "Values-driven", "Flexible"],
-  },
+const getPersonalityProfile = (scores: Record<string, number>): PersonalityResult => {
+  // Determine dominant traits based on scores
+  const traits = []
+  const dominantDimensions = []
+
+  if (scores.honesty > 3.5) {
+    traits.push("Honest", "Sincere", "Fair")
+    dominantDimensions.push("High Honesty-Humility")
+  }
+  if (scores.emotionality > 3.5) {
+    traits.push("Sensitive", "Anxious", "Sentimental")
+    dominantDimensions.push("High Emotionality")
+  } else if (scores.emotionality < 2.5) {
+    traits.push("Brave", "Tough", "Independent")
+    dominantDimensions.push("Low Emotionality")
+  }
+  if (scores.extraversion > 3.5) {
+    traits.push("Outgoing", "Sociable", "Confident")
+    dominantDimensions.push("High Extraversion")
+  } else if (scores.extraversion < 2.5) {
+    traits.push("Reserved", "Quiet", "Introspective")
+    dominantDimensions.push("Low Extraversion")
+  }
+  if (scores.agreeableness > 3.5) {
+    traits.push("Forgiving", "Gentle", "Cooperative")
+    dominantDimensions.push("High Agreeableness")
+  }
+  if (scores.conscientiousness > 3.5) {
+    traits.push("Organized", "Disciplined", "Careful")
+    dominantDimensions.push("High Conscientiousness")
+  }
+  if (scores.openness > 3.5) {
+    traits.push("Creative", "Curious", "Unconventional")
+    dominantDimensions.push("High Openness")
+  }
+
+  const title = dominantDimensions.slice(0, 2).join(" & ") || "Balanced Profile"
+  const description = `Your personality profile shows ${dominantDimensions.length > 0 ? dominantDimensions.join(", ") : "a balanced mix across all dimensions"}. This combination of traits influences how you approach work, relationships, and personal growth.`
+
+  return {
+    type: "HEXACO", // Simple label instead of complex type code
+    title,
+    description,
+    traits: traits.slice(0, 6),
+    scores,
+  }
 }
 
 export function PersonalityQuizPage() {
@@ -119,57 +169,40 @@ export function PersonalityQuizPage() {
   }
 
   const calculateResult = () => {
-    // Simple personality type calculation based on answers
     const scores = {
+      honesty: 0,
+      emotionality: 0,
       extraversion: 0,
-      introversion: 0,
-      sensing: 0,
-      intuition: 0,
-      thinking: 0,
-      feeling: 0,
-      judging: 0,
-      perceiving: 0,
+      agreeableness: 0,
+      conscientiousness: 0,
+      openness: 0,
+    }
+
+    const counts = {
+      honesty: 0,
+      emotionality: 0,
+      extraversion: 0,
+      agreeableness: 0,
+      conscientiousness: 0,
+      openness: 0,
     }
 
     quizQuestions.forEach((question) => {
       const answer = answers[question.id] || 3
-      const score = answer - 3 // Convert 1-5 scale to -2 to +2
+      const score = question.reverse ? 6 - answer : answer // Reverse scoring for reverse items
 
-      if (question.category === "extraversion") {
-        scores.extraversion += score
-        scores.introversion -= score
-      } else if (question.category === "sensing") {
-        scores.sensing += score
-        scores.intuition -= score
-      } else if (question.category === "thinking") {
-        scores.thinking += score
-        scores.feeling -= score
-      } else if (question.category === "judging") {
-        scores.judging += score
-        scores.perceiving -= score
-      } else if (question.category === "intuition") {
-        scores.intuition += score
-        scores.sensing -= score
-      } else if (question.category === "feeling") {
-        scores.feeling += score
-        scores.thinking -= score
-      } else if (question.category === "perceiving") {
-        scores.perceiving += score
-        scores.judging -= score
-      } else if (question.category === "introversion") {
-        scores.introversion += score
-        scores.extraversion -= score
-      }
+      scores[question.category as keyof typeof scores] += score
+      counts[question.category as keyof typeof counts] += 1
     })
 
-    // Determine personality type
-    const type =
-      (scores.extraversion > scores.introversion ? "E" : "I") +
-      (scores.sensing > scores.intuition ? "S" : "N") +
-      (scores.thinking > scores.feeling ? "T" : "F") +
-      (scores.judging > scores.perceiving ? "J" : "P")
+    // Calculate average scores for each dimension
+    Object.keys(scores).forEach((key) => {
+      const dimension = key as keyof typeof scores
+      scores[dimension] = scores[dimension] / counts[dimension]
+    })
 
-    setPersonalityResult(personalityTypes[type] || personalityTypes.INTJ)
+    const result = getPersonalityProfile(scores)
+    setPersonalityResult(result)
     setShowResult(true)
   }
 
@@ -183,22 +216,34 @@ export function PersonalityQuizPage() {
                 <CheckCircle className="w-10 h-10 text-primary-foreground" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Your Personality
+                Your HEXACO Profile
               </h1>
             </div>
           </div>
 
           <Card className="backdrop-blur-sm bg-card/80 border-2 shadow-2xl">
             <CardHeader className="text-center">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <Badge variant="secondary" className="text-2xl font-bold px-6 py-2">
-                  {personalityResult.type}
-                </Badge>
-              </div>
               <CardTitle className="text-3xl mb-2">{personalityResult.title}</CardTitle>
               <CardDescription className="text-lg text-balance">{personalityResult.description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Your HEXACO Scores</h3>
+                <div className="space-y-2">
+                  {Object.entries(personalityResult.scores).map(([dimension, score]) => (
+                    <div key={dimension} className="flex items-center justify-between">
+                      <span className="capitalize font-medium">
+                        {dimension === "extraversion" ? "eXtraversion" : dimension}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Progress value={(score / 5) * 100} className="w-24 h-2" />
+                        <span className="text-sm font-mono">{score.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold mb-3">Your Key Traits</h3>
                 <div className="flex flex-wrap gap-2">
@@ -247,7 +292,7 @@ export function PersonalityQuizPage() {
               <Brain className="w-10 h-10 text-primary-foreground" />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Personality Quiz
+              HEXACO Personality Test
             </h1>
           </div>
           <div className="space-y-2">
