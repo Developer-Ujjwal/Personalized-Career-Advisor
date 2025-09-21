@@ -1,5 +1,5 @@
 import google.generativeai as genai
-from model import Profile, CareerRecommendationsResponse, CareerKeywordsResponse
+from model import Profile, CareerRecommendationsResponse, CareerKeywordsResponse, HexacoScores
 import json
 import random
 from setup import model
@@ -24,7 +24,7 @@ class DynamicCareerGuidanceAgent:
 
         self.trend_analyzer = CareerTrendAnalyzer()
 
-    def generate_question(self, conversation_history: list, personality_type: str) -> str:
+    def generate_question(self, conversation_history: list, hexaco_scores: HexacoScores) -> str:
         """Generate a dynamic question based on conversation history using Gemini"""
         try:
             # Create prompt for question generation
@@ -34,7 +34,7 @@ class DynamicCareerGuidanceAgent:
                 "The question should be open-ended and encourage thoughtful responses.",
                 "Conversation history:",
                 str(conversation_history),
-                "Personality Type of the User is: " + personality_type,
+                f"HEXACO Personality Type of the User is: {hexaco_scores.model_dump_json()}. HEXACO measures six dimensions: Honesty-Humility, Emotionality, eXtraversion, Agreeableness, Conscientiousness, and Openness to Experience.",
                 "Generate just the question without any additional text:"
             ]
 
@@ -122,11 +122,11 @@ class DynamicCareerGuidanceAgent:
             print("Error extracting career keywords:", e)
             return []
 
-    def generate_recommendations(self, user_profile: dict, personality_type: str = None) -> str:
+    def generate_recommendations(self, user_profile: dict, hexaco_scores: HexacoScores = None) -> str:
         """Generate career recommendations based on the user profile and personality type"""
         try:
             print(f"User Profile: {user_profile}")
-            print(f"Personality type: {personality_type}")
+            print(f"Personality type: {hexaco_scores}")
             career_keywords = self.extract_career_keywords(user_profile)
             trending_info = self.trend_analyzer.analyze_career_demand(career_keywords) 
             print(trending_info)
@@ -138,7 +138,7 @@ class DynamicCareerGuidanceAgent:
         
                     
             Personality Type: 
-            {personality_type}
+            {hexaco_scores.model_dump_json()}
         
             Career Demand Trends (from Google Trends or related data):
             {json.dumps(trending_info, indent=2)}

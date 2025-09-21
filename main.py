@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends, Body
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Optional
 import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from agent import DynamicCareerGuidanceAgent
-from model import User, UserCreate, UserResponse, AnswerRequest
+from model import User, UserCreate, UserResponse, AnswerRequest, HexacoScores
+import uuid
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -18,6 +20,14 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30*100000000
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Adjust this to your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #TODO In-memory user storage (replace with database in production)
 users_db: Dict[str, User] = {}
@@ -34,10 +44,10 @@ class CareerGuidanceRouter:
         )
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            username: str = payload.get("sub")
-            if username is None or username not in users_db:
+            user_email: str = payload.get("sub")
+            if user_email is None or user_email not in users_db:
                 raise credentials_exception
-            return users_db[username]
+            return users_db[user_email]
         except jwt.PyJWTError:
             raise credentials_exception
 
@@ -49,22 +59,23 @@ class CareerGuidanceRouter:
         return encoded_jwt
 
     async def register_user(self, user: UserCreate):
-        if user.username in users_db:
-            raise HTTPException(status_code=400, detail="Username already registered")
+        if user.email in users_db:
+            raise HTTPException(status_code=400, detail="Email already registered")
         
         hashed_password = pwd_context.hash(user.password)
         db_user = User(
+            id=str(uuid.uuid4()),  # Generate a unique ID
             username=user.username,
             email=user.email,
             hashed_password=hashed_password,
         )
         db_user.conversation_history.append({"role": "system", "parts": [self.agent.system_prompt]})
-        users_db[user.username] = db_user
+        users_db[user.email] = db_user
         return {"message": "User created successfully"}
 
     async def get_next_question(self, current_user: User = Depends(get_current_user)):
         # Generate next question based on user's conversation history
-        question = self.agent.generate_question(current_user.conversation_history, current_user.personality_type)
+        question = self.agent.generate_question(current_user.conversation_history, current_user.hexaco_scores)
         current_user.conversation_history.append({
             "role": "user",
             "parts": [question]
@@ -99,11 +110,11 @@ class CareerGuidanceRouter:
         if len(current_user.conversation_history) >= 10:
             recommendations = self.agent.generate_recommendations(
                 current_user.user_profile,
-                current_user.personality_type
+                current_user.hexaco_scores
             )
             return recommendations
         
-        next_question = self.agent.generate_question(current_user.conversation_history, current_user.personality_type)
+        next_question = self.agent.generate_question(current_user.conversation_history, current_user.hexaco_scores)
         current_user.conversation_history.append({
             "role": "user",
             "parts": [next_question]
@@ -124,10 +135,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not user or not pwd_context.verify(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=401,
-            detail="Incorrect username or password",
+            detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = career_router.create_access_token(data={"sub": user.username})
+    access_token = career_router.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/question")
@@ -147,7 +158,17 @@ async def submit_answer(
 async def get_profile(current_user: User = Depends(career_router.get_current_user)):
     return current_user.user_profile
 
-@app.post("/personality_type")
-async def set_personality_type(personality_type: str = Body(...), current_user: User = Depends(career_router.get_current_user)):
-    current_user.personality_type = personality_type
-    return {"message": "Personality type set successfully"}
+@app.post("/hexaco_scores")
+async def set_hexaco_scores(hexaco_scores: HexacoScores, current_user: User = Depends(career_router.get_current_user)):
+    current_user.hexaco_scores = hexaco_scores
+    return {"message": "HEXACO scores set successfully"}
+
+@app.get("/hexaco_scores")
+async def get_hexaco_scores(current_user: User = Depends(career_router.get_current_user)):
+    if current_user.hexaco_scores:
+        return current_user.hexaco_scores
+    raise HTTPException(status_code=404, detail="HEXACO scores not found for this user")
+
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(career_router.get_current_user)):
+    return current_user

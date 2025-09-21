@@ -59,7 +59,7 @@ export function PersonalityEntryPage() {
               </Link>
               <div className="mt-4 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Perfect for those who know their MBTI, Enneagram, or other personality types
+                  Perfect for those who know their HEXACO, Enneagram, or other personality types
                 </p>
               </div>
             </CardContent>

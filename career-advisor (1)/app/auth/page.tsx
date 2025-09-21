@@ -8,20 +8,62 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Github, Mail, Sparkles, Target, Users } from "lucide-react"
+import { Sparkles, Target, Users } from "lucide-react"
 
-export function AuthPage() {
+export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement authentication logic
-    console.log("Auth form submitted:", { email, password, name, isSignUp })
-    // For now, redirect to personality entry
-    window.location.href = "/personality-entry"
+
+    const authEndpoint = isSignUp ? "/register" : "/token"
+    const body = isSignUp
+      ? JSON.stringify({ email, password, username: email })
+      : `username=${email}&password=${password}`
+    const headers = isSignUp
+      ? { "Content-Type": "application/json" }
+      : { "Content-Type": "application/x-www-form-urlencoded" }
+
+    try {
+      const response = await fetch(`http://localhost:8000${authEndpoint}`, {
+        method: "POST",
+        headers,
+        body,
+      })
+      console.log("Auth Request:", { authEndpoint, headers, body })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.access_token) {
+        localStorage.setItem("access_token", data.access_token)
+        window.location.href = "/personality-entry"
+      } else if (isSignUp) {
+        // If it's a signup and no access_token, it means registration was successful, now log in
+        const loginResponse = await fetch("http://localhost:8000/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `username=${email}&password=${password}`,
+        })
+
+        if (!loginResponse.ok) {
+          const errorData = await loginResponse.json()
+          throw new Error(errorData.detail || `HTTP error! status: ${loginResponse.status}`)
+        }
+        const loginData = await loginResponse.json()
+        localStorage.setItem("access_token", loginData.access_token)
+        window.location.href = "/personality-entry"
+      }
+    } catch (error) {
+      console.error("Authentication error:", error)
+      alert(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
   }
 
   const handleOAuthSignIn = (provider: string) => {
@@ -68,33 +110,6 @@ export function AuthPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* OAuth Buttons */}
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base hover:bg-accent/10 transition-all duration-300 bg-transparent"
-                onClick={() => handleOAuthSignIn("google")}
-              >
-                <Mail className="w-5 h-5 mr-3" />
-                Continue with Google
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base hover:bg-accent/10 transition-all duration-300 bg-transparent"
-                onClick={() => handleOAuthSignIn("github")}
-              >
-                <Github className="w-5 h-5 mr-3" />
-                Continue with GitHub
-              </Button>
-            </div>
-
-            <div className="relative">
-              <Separator />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="bg-card px-4 text-sm text-muted-foreground">or</span>
-              </div>
-            </div>
-
             {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (

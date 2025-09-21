@@ -27,75 +27,77 @@ interface CareerOption {
   matchPercentage: number
 }
 
-const sampleCareerOptions: CareerOption[] = [
-  {
-    id: "1",
-    title: "UX/UI Designer",
-    description:
-      "Create intuitive and visually appealing user interfaces for digital products, focusing on user experience and design systems.",
-    demandLevel: "High",
-    demandColor: "text-green-600",
-    matchPercentage: 92,
-  },
-  {
-    id: "2",
-    title: "Product Manager",
-    description:
-      "Lead product development from conception to launch, working with cross-functional teams to deliver user-centered solutions.",
-    demandLevel: "High",
-    demandColor: "text-green-600",
-    matchPercentage: 88,
-  },
-  {
-    id: "3",
-    title: "Data Scientist",
-    description:
-      "Analyze complex datasets to extract insights and build predictive models that drive business decisions and innovation.",
-    demandLevel: "High",
-    demandColor: "text-green-600",
-    matchPercentage: 85,
-  },
-  {
-    id: "4",
-    title: "Marketing Strategist",
-    description:
-      "Develop comprehensive marketing campaigns and strategies to promote products and build brand awareness across multiple channels.",
-    demandLevel: "Medium",
-    demandColor: "text-yellow-600",
-    matchPercentage: 78,
-  },
-  {
-    id: "5",
-    title: "Software Engineer",
-    description:
-      "Design and develop software applications, working with modern technologies to solve complex technical challenges.",
-    demandLevel: "High",
-    demandColor: "text-green-600",
-    matchPercentage: 82,
-  },
-]
+interface CareerRecommendation {
+  career_name: string;
+  fit_explanation: string;
+  required_skills_education: string;
+  potential_growth: string;
+}
 
-const agentQuestions = [
-  "Hi! I'm your AI Career Agent. Let's find your perfect career path! First, could you tell me about your personality type or what you learned from the quiz?",
-  "Great! Now, what activities or subjects do you find most engaging? What makes you lose track of time?",
-  "Interesting! What kind of work environment do you thrive in? Do you prefer collaborative teams, independent work, or a mix of both?",
-  "Perfect! What are your long-term career goals? Are you looking for leadership opportunities, creative expression, or technical expertise?",
-  "Excellent! One final question - what industries or fields have always fascinated you, even if you haven't worked in them?",
-]
+// const sampleCareerOptions: CareerOption[] = [
+//   {
+//     id: "1",
+//     title: "UX/UI Designer",
+//     description:\
+//       "Create intuitive and visually appealing user interfaces for digital products, focusing on user experience and design systems.",
+//     demandLevel: "High",
+//     demandColor: "text-green-600",
+//     matchPercentage: 92,
+//   },
+//   {
+//     id: "2",
+//     title: "Product Manager",
+//     description:\
+//       "Lead product development from conception to launch, working with cross-functional teams to deliver user-centered solutions.",
+//     demandLevel: "High",
+//     demandColor: "text-green-600",
+//     matchPercentage: 88,
+//   },
+//   {
+//     id: "3",
+//     title: "Data Scientist",
+//     description:\
+//       "Analyze complex datasets to extract insights and build predictive models that drive business decisions and innovation.",
+//     demandLevel: "High",
+//     demandColor: "text-green-600",
+//     matchPercentage: 85,
+//   },
+//   {
+//     id: "4",
+//     title: "Marketing Strategist",
+//     description:\
+//       "Develop comprehensive marketing campaigns and strategies to promote products and build brand awareness across multiple channels.",
+//     demandLevel: "Medium",
+//     demandColor: "text-yellow-600",
+//     matchPercentage: 78,
+//   },
+//   {
+//     id: "5",
+//     title: "Software Engineer",
+//     description:\
+//       "Design and develop software applications, working with modern technologies to solve complex technical challenges.",
+//     demandLevel: "High",
+//     demandColor: "text-green-600",
+//     matchPercentage: 82,
+//   },
+// ]
+
+// const agentQuestions = [
+//   "Hi! I'm your AI Career Agent. Let's find your perfect career path! First, could you tell me about your HEXACO personality type or what you learned from the quiz?",
+//   "Great! Now, what activities or subjects do you find most engaging? What makes you lose track of time?",
+//   "Interesting! What kind of work environment do you thrive in? Do you prefer collaborative teams, independent work, or a mix of both?",
+//   "Perfect! What are your long-term career goals? Are you looking for leadership opportunities, creative expression, or technical expertise?",
+//   "Excellent! One final question - what industries or fields have always fascinated you, even if you haven't worked in them?",
+// ]
 
 export function CareerAgentPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "agent",
-      content: agentQuestions[0],
-      timestamp: new Date(),
-    },
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [currentInput, setCurrentInput] = useState("")
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showCareerOptions, setShowCareerOptions] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [careerRecommendations, setCareerRecommendations] = useState<CareerRecommendation[]>([]);
+  const [additionalAdvice, setAdditionalAdvice] = useState<string>("");
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -104,7 +106,64 @@ export function CareerAgentPage() {
     }
   }, [messages, isTyping])
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    const fetchInitialQuestion = async () => {
+      setIsTyping(true)
+      try {
+        const response = await fetch("http://localhost:8000/question", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+        })
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+
+        if (data.recommendations) {
+          // Handle recommendations
+          const finalMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: "agent",
+            content:
+              "Thank you for sharing! Based on our conversation, I've analyzed your personality, interests, and preferences. Here are the top career paths that match your profile:",
+            timestamp: new Date(),
+          }
+          setMessages((prev) => [...prev, finalMessage])
+          setCareerRecommendations(data.recommendations);
+          setAdditionalAdvice(data.additional_advice || "");
+          setTimeout(() => setShowCareerOptions(true), 1000)
+        } else if (data.question) {
+          // Handle next question
+          const agentMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            type: "agent",
+            content: data.question,
+            timestamp: new Date(),
+          }
+          setMessages((prev) => [...prev, agentMessage])
+        } else {
+          throw new Error("Unexpected response from backend")
+        }
+      } catch (error) {
+        console.error("Error sending message or getting response:", error)
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          type: "agent",
+          content: "I'm sorry, I encountered an error. Please try again.",
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, errorMessage])
+      } finally {
+        setIsTyping(false)
+      }
+    }
+    fetchInitialQuestion()
+  }, [])
+
+  const handleSendMessage = async () => {
     if (!currentInput.trim()) return
 
     const userMessage: Message = {
@@ -118,22 +177,24 @@ export function CareerAgentPage() {
     setCurrentInput("")
     setIsTyping(true)
 
-    // Simulate agent typing delay
-    setTimeout(() => {
-      setIsTyping(false)
-      const nextQuestionIndex = currentQuestionIndex + 1
+    try {
+      const response = await fetch("http://localhost:8000/answer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({ answer: userMessage.content }),
+      })
 
-      if (nextQuestionIndex < agentQuestions.length) {
-        const agentMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: "agent",
-          content: agentQuestions[nextQuestionIndex],
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, agentMessage])
-        setCurrentQuestionIndex(nextQuestionIndex)
-      } else {
-        // Show final message and career options
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+
+      if (data.recommendations) {
+        // Handle recommendations
         const finalMessage: Message = {
           id: (Date.now() + 1).toString(),
           type: "agent",
@@ -142,9 +203,33 @@ export function CareerAgentPage() {
           timestamp: new Date(),
         }
         setMessages((prev) => [...prev, finalMessage])
+        setCareerRecommendations(data.recommendations);
+        setAdditionalAdvice(data.additional_advice || "");
         setTimeout(() => setShowCareerOptions(true), 1000)
+      } else if (data.question) {
+        // Handle next question
+        const agentMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: "agent",
+          content: data.question,
+          timestamp: new Date(),
+        }
+        setMessages((prev) => [...prev, agentMessage])
+      } else {
+        throw new Error("Unexpected response from backend")
       }
-    }, 1500)
+    } catch (error) {
+      console.error("Error sending message or getting response:", error)
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: "agent",
+        content: "I'm sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -245,39 +330,47 @@ export function CareerAgentPage() {
                   <div className="text-center">
                     <h2 className="text-2xl font-bold mb-2">Your Career Matches</h2>
                     <p className="text-muted-foreground">Based on your personality and preferences</p>
+                    {additionalAdvice && <p className="text-sm text-muted-foreground mt-2">{additionalAdvice}</p>}
                   </div>
                   <div className="grid gap-4">
-                    {sampleCareerOptions.map((career) => (
+                    {careerRecommendations.map((career, index) => (
                       <Card
-                        key={career.id}
+                        key={index}
                         className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] backdrop-blur-sm bg-card/80 border-2"
                       >
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <CardTitle className="text-lg mb-1">{career.title}</CardTitle>
-                              <CardDescription className="text-sm leading-relaxed">
-                                {career.description}
+                              <CardTitle className="text-lg mb-1">{career.career_name}</CardTitle>
+                              <CardDescription className="text-sm leading-relaxed whitespace-normal max-w-full break-words">
+                                {career.fit_explanation}
                               </CardDescription>
                             </div>
-                            <div className="text-right ml-4">
+                            {/* <div className="text-right ml-4">
                               <div className="text-2xl font-bold text-primary mb-1">{career.matchPercentage}%</div>
                               <div className="text-xs text-muted-foreground">Match</div>
-                            </div>
+                            </div> */}
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 flex-wrap">
                               <div className="flex items-center gap-1">
                                 <TrendingUp className="w-4 h-4" />
-                                <span className="text-sm">Demand:</span>
-                                <Badge variant="outline" className={career.demandColor}>
-                                  {career.demandLevel}
+                                <span className="text-sm">Required Skills/Education:</span>
+                                <Badge variant="outline" className="whitespace-normal max-w-full break-words">
+                                  {career.required_skills_education}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <TrendingUp className="w-4 h-4" />
+                                <span className="text-sm">Potential Growth:</span>
+                                <Badge variant="outline" className="whitespace-normal max-w-full break-words">
+                                  {career.potential_growth}
                                 </Badge>
                               </div>
                             </div>
-                            <Link href={`/career-roadmap?career=${career.id}`}>
+                            <Link href={`/career-roadmap?career=${career.career_name}`}>
                               <Button className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300">
                                 View Roadmap
                                 <ExternalLink className="w-4 h-4 ml-2" />

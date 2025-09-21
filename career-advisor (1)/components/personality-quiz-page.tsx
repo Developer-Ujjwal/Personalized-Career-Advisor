@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Brain, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import axios from "axios"
+import { useEffect } from "react"
 
 interface QuizQuestion {
   id: number
@@ -147,6 +149,37 @@ export function PersonalityQuizPage() {
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [showResult, setShowResult] = useState(false)
   const [personalityResult, setPersonalityResult] = useState<PersonalityResult | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchHexacoScores = async () => {
+      try {
+        const token = localStorage.getItem("access_token")
+        if (!token) {
+          setIsLoading(false)
+          return
+        }
+
+        const response = await axios.get("http://127.0.0.1:8000/hexaco_scores", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (response.data && Object.keys(response.data).length > 0) {
+          const hexacoScores = response.data
+          const result = getPersonalityProfile(hexacoScores)
+          setPersonalityResult(result)
+          setShowResult(true)
+        }
+      } catch (error) {
+        console.error("Error fetching HEXACO scores:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchHexacoScores()
+  }, [])
 
   const progress = ((currentQuestion + 1) / quizQuestions.length) * 100
 
@@ -168,7 +201,7 @@ export function PersonalityQuizPage() {
     }
   }
 
-  const calculateResult = () => {
+  const calculateResult = async () => {
     const scores = {
       honesty: 0,
       emotionality: 0,
@@ -204,6 +237,43 @@ export function PersonalityQuizPage() {
     const result = getPersonalityProfile(scores)
     setPersonalityResult(result)
     setShowResult(true)
+
+    // Send HEXACO scores to backend
+    try {
+      const token = localStorage.getItem("access_token")
+      if (!token) {
+        console.error("No access token found. User not authenticated.")
+        return
+      }
+
+      await axios.post(
+        "http://127.0.0.1:8000/hexaco_scores",
+        {
+          honesty_humility: scores.honesty,
+          emotionality: scores.emotionality,
+          extraversion: scores.extraversion,
+          agreeableness: scores.agreeableness,
+          conscientiousness: scores.conscientiousness,
+          openness_to_experience: scores.openness,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      console.log("HEXACO scores saved successfully!")
+    } catch (error) {
+      console.error("Error saving HEXACO scores:", error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading personality scores...</p>
+      </div>
+    )
   }
 
   if (showResult && personalityResult) {

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict, List, Any, Tuple, Optional
 
 class Profile(BaseModel):
@@ -24,11 +24,21 @@ class CareerKeywordsResponse(BaseModel):
     keywords: List[str]
 
 # User models
+class HexacoScores(BaseModel):
+    honesty_humility: float = 0.0
+    emotionality: float = 0.0
+    extraversion: float = 0.0
+    agreeableness: float = 0.0
+    conscientiousness: float = 0.0
+    openness_to_experience: float = 0.0
+
 class User(BaseModel):
+    id: str
     username: str
     email: str
     hashed_password: str
-    conversation_history: List[Dict] = []
+    conversation_history: List[str] = []
+    hexaco_scores: Optional[HexacoScores] = None
     user_profile: Dict = {
         "interests": [],
         "skills": [],
@@ -38,7 +48,6 @@ class User(BaseModel):
         "experience_level": "",
         "dislikes": []
     }
-    personality_type: str=""
     career_recommendations: List[Dict] = []
     additional_advice: str=""
 

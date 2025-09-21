@@ -42,10 +42,20 @@ export function Navigation() {
             )
           })}
           <div className="w-px h-6 bg-border mx-2" />
-          <Button variant="ghost" size="sm" className="rounded-full px-3 text-muted-foreground hover:text-foreground">
-            <User className="w-4 h-4 mr-2" />
-            Profile
-          </Button>
+          <Link href="/profile">
+            <Button
+              variant={pathname === "/profile" ? "default" : "ghost"}
+              size="sm"
+              className={`rounded-full px-3 ${
+                pathname === "/profile"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </Button>
+          </Link>
         </div>
       </div>
     </nav>
