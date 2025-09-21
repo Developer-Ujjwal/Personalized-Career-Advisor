@@ -239,9 +239,30 @@ export function CareerAgentPage() {
     }
   }
 
-  const handleViewRoadmap = (careerId: string) => {
-    window.location.href = `/career-roadmap?career=${careerId}`
-  }
+  const handleViewRoadmap = async (careerName: string) => {
+    try {
+      const response = await fetch("http://localhost:8000/roadmap", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({ career_goal: careerName }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const roadmapData = await response.json();
+      // Store roadmapData in local storage or a global state management for the roadmap page to access
+      localStorage.setItem("current_roadmap", JSON.stringify(roadmapData));
+      window.location.href = `/career-roadmap?career=${encodeURIComponent(careerName)}`;
+    } catch (error) {
+      console.error("Error generating roadmap:", error);
+      // Optionally, display an error message to the user
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex flex-col">

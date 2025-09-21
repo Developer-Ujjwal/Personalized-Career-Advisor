@@ -1,16 +1,16 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import ReactFlow, { Background, Controls, MarkerType } from "reactflow";
 import type { Node, NodeProps } from "reactflow";
 import "reactflow/dist/style.css";
-import type { RoadmapNode, RoadmapEdge, StepDetails } from "../types/roadmap";
+import type { RoadmapNode, RoadmapEdge, RoadmapStep } from "../types/roadmap";
 import StepModal from "./StepModal";
-import { getStepDetails } from "../lib/gemini";
 import { Clock, ChevronRight } from "lucide-react";
 
 interface Props {
   nodes: RoadmapNode[];
   edges: RoadmapEdge[];
   overallGoal: string;
+  onStepClick: (step: RoadmapStep) => void;
 }
 
 // Custom node component - OUTSIDE the main component to prevent recreation
@@ -103,33 +103,12 @@ const nodeTypes = {
   custom: CustomNode,
 };
 
-export default function RoadmapGraph({ nodes, edges, overallGoal }: Props) {
-  const [selectedStep, setSelectedStep] = useState<StepDetails | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
-
+export default function RoadmapGraph({ nodes, edges, overallGoal, onStepClick }: Props) {
   const handleNodeClick = useCallback(async (_event: React.MouseEvent, node: Node) => {
     if (node.data.step) {
-      setIsLoadingDetails(true);
-      setIsModalOpen(true);
-      setSelectedStep(null);
-      
-      try {
-        console.log('Fetching details for step:', node.data.step.title);
-        const stepDetails = await getStepDetails(node.data.step, overallGoal);
-        setSelectedStep(stepDetails);
-      } catch (error) {
-        console.error('Error fetching step details:', error);
-      } finally {
-        setIsLoadingDetails(false);
-      }
+      onStepClick(node.data.step);
     }
-  }, [overallGoal]);
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedStep(null);
-  };
+  }, [onStepClick]);
 
   // Memoize the processed nodes and edges to prevent unnecessary recalculations
   const { processedNodes, validEdges } = useMemo(() => {
@@ -346,13 +325,6 @@ export default function RoadmapGraph({ nodes, edges, overallGoal }: Props) {
           <Controls />
         </ReactFlow>
       </div>
-
-      <StepModal 
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        stepDetails={selectedStep}
-        isLoading={isLoadingDetails}
-      />
     </>
   );
 }

@@ -63,3 +63,69 @@ class UserResponse(BaseModel):
 # Add this with other model classes
 class AnswerRequest(BaseModel):
     answer: str
+
+# Roadmap models
+class RoadmapStep(BaseModel):
+    id: str
+    title: str
+    description: str
+    prerequisites: List[str] = []
+class Resource(BaseModel):
+    type: str
+    title: str
+    url: Optional[str] = None
+    description: Optional[str] = None
+
+class RoadmapStep(BaseModel):
+    id: str
+    title: str
+    description: str
+    prerequisites: List[str] = []
+    resources: List[Resource] = []
+    details: Optional[str] = None
+    duration: Optional[str] = None
+    skills: List[str] = []
+    milestones: List[str] = []
+
+class RoadmapNodeData(BaseModel):
+    label: str
+    skills: List[str]
+    experience: str
+    step: Optional[RoadmapStep] = None
+
+class RoadmapNode(BaseModel):
+    id: str
+    data: RoadmapNodeData
+    position: Dict[str, int]
+
+class RoadmapEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+
+class Roadmap(BaseModel):
+    nodes: List[RoadmapNode]
+    edges: List[RoadmapEdge]
+
+class RoadmapRequest(BaseModel):
+    career_goal: str
+
+class StepDetailsRequest(BaseModel):
+    step: RoadmapStep
+    overall_goal: str
+
+class SkillDetail(BaseModel):
+    name: str
+    description: str
+    learningPath: List[str] = []
+    practiceProjects: List[str] = []
+    resources: List[Resource] = []
+    timeToLearn: str
+    difficulty: str
+
+class StepDetails(BaseModel):
+    step: RoadmapStep
+    skillDetails: List[SkillDetail] = []
+    tips: List[str] = []
+    commonMistakes: List[str] = []
+    successMetrics: List[str] = []

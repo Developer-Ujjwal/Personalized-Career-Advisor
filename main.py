@@ -1,13 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from typing import Dict, Optional
+from pydantic import BaseModel, Field
+from typing import Dict, List, Any, Tuple, Optional
 import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from agent import DynamicCareerGuidanceAgent
-from model import User, UserCreate, UserResponse, AnswerRequest, HexacoScores
+from roadmap_agent import RoadmapAgent
+from model import User, UserCreate, UserResponse, AnswerRequest, HexacoScores, Roadmap, RoadmapRequest, RoadmapStep, StepDetailsRequest
 import uuid
 
 # Password hashing
@@ -35,12 +36,13 @@ users_db: Dict[str, User] = {}
 class CareerGuidanceRouter:
     def __init__(self):
         self.agent = DynamicCareerGuidanceAgent()  # Your existing agent class
+        self.roadmap_agent = RoadmapAgent() # Initialize RoadmapAgent
     
     async def get_current_user(self, token: str = Depends(oauth2_scheme)):
         credentials_exception = HTTPException(
             status_code=401,
             detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
+            headers={"WWW-authenticate": "Bearer"},
         )
         try:
             payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -50,6 +52,12 @@ class CareerGuidanceRouter:
             return users_db[user_email]
         except jwt.PyJWTError:
             raise credentials_exception
+
+    async def generate_career_roadmap(self, career_start: str, career_goal: str) -> Roadmap:    
+        return await self.roadmap_agent.generate_career_roadmap(career_start,career_goal)
+
+    async def get_roadmap_step_details(self, step_details_request: StepDetailsRequest) -> dict:
+        return await self.roadmap_agent.get_roadmap_step_details(step_details_request.step, step_details_request.overall_goal)
 
     def create_access_token(self, data: dict):
         to_encode = data.copy()
@@ -172,3 +180,16 @@ async def get_hexaco_scores(current_user: User = Depends(career_router.get_curre
 @app.get("/users/me", response_model=User)
 async def read_users_me(current_user: User = Depends(career_router.get_current_user)):
     return current_user
+
+@app.post("/roadmap", response_model=Roadmap)
+async def generate_roadmap(request: RoadmapRequest, current_user: User = Depends(career_router.get_current_user)):
+
+    return await career_router.generate_career_roadmap(current_user.user_profile["education_level"],request.career_goal)
+
+@app.get("/roadmap/step/{step_id}")
+async def get_roadmap_step_details(step_details_request: StepDetailsRequest, current_user: User = Depends(career_router.get_current_user)):
+    return await career_router.get_roadmap_step_details(step_details_request)
+
+@app.post("/roadmap/step-details")
+async def get_roadmap_step_details(step_details_request: StepDetailsRequest, current_user: User = Depends(career_router.get_current_user)):
+    return await career_router.get_roadmap_step_details(step_details_request)
