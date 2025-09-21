@@ -20,12 +20,14 @@ export default function CareerRoadmapPage() {
     const storedRoadmap = localStorage.getItem("current_roadmap");
     if (storedRoadmap) {
       setRoadmap(JSON.parse(storedRoadmap));
-      const params = new URLSearchParams(window.location.search);
+    }
+    const params = new URLSearchParams(window.location.search);
       const goal = params.get("career");
+      console.log("Career goal from URL:", goal);
       if (goal) {
         setCareerGoal(decodeURIComponent(goal));
+        handleGenerateRoadmap(decodeURIComponent(goal));
       }
-    }
   }, []);
 
   const handleGenerateRoadmap = async (goal: string) => {
