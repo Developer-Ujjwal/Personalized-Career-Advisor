@@ -28,7 +28,7 @@ export default function AuthPage() {
       : { "Content-Type": "application/x-www-form-urlencoded" }
 
     try {
-      const response = await fetch(`http://localhost:8000${authEndpoint}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
         method: "POST",
         headers,
         body,
@@ -46,7 +46,7 @@ export default function AuthPage() {
         window.location.href = "/personality-entry"
       } else if (isSignUp) {
         // If it's a signup and no access_token, it means registration was successful, now log in
-        const loginResponse = await fetch("http://localhost:8000/token", {
+        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/token`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: `username=${email}&password=${password}`,

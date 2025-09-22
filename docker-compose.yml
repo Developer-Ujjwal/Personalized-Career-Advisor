@@ -1,0 +1,34 @@
+version: '1'
+
+services:
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+    container_name: synapse_backend
+    ports:
+      - "8000:8000"
+    networks:
+      - synapse_network
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./career-advisor (1)
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: synapse_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - synapse_network
+    restart: unless-stopped
+
+networks:
+  synapse_network:
+    driver: bridge

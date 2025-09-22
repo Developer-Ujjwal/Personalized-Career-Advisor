@@ -110,7 +110,7 @@ export function CareerAgentPage() {
     const fetchInitialQuestion = async () => {
       setIsTyping(true)
       try {
-        const response = await fetch("http://localhost:8000/question", {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/question`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -178,7 +178,7 @@ export function CareerAgentPage() {
     setIsTyping(true)
 
     try {
-      const response = await fetch("http://localhost:8000/answer", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/answer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -241,7 +241,7 @@ export function CareerAgentPage() {
 
   const handleViewRoadmap = async (careerName: string) => {
     try {
-      const response = await fetch("http://localhost:8000/roadmap", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -37,7 +37,7 @@ const ProfilePage: React.FC = () => {
         // For now, let's assume we can get email from the token or a generic user endpoint
         // Or, if the backend sends user details with hexaco scores, we can use that.
         // For simplicity, let's assume a /me endpoint or similar exists.
-        const userResponse = await axios.get('http://localhost:8000/users/me', {
+        const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,7 +45,7 @@ const ProfilePage: React.FC = () => {
         setUserProfile(userResponse.data);
 
         // Fetch HEXACO scores
-        const hexacoResponse = await axios.get('http://localhost:8000/hexaco_scores', {
+        const hexacoResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/hexaco_scores`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

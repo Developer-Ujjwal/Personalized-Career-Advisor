@@ -1,9 +1,7 @@
 import { RoadmapNode, RoadmapStep, StepDetails } from '@/components/roadmap-agent-components/types/roadmap';
 
-const API_BASE_URL = 'http://localhost:8000'; // Replace with your backend API URL
-
 export async function fetchRoadmap(careerGoal: string): Promise<{nodes: RoadmapNode[], edges: any[]}> {
-  const response = await fetch(`${API_BASE_URL}/roadmap`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -20,7 +18,7 @@ export async function fetchRoadmap(careerGoal: string): Promise<{nodes: RoadmapN
 }
 
 export async function fetchRoadmapStepDetails(step: RoadmapStep, overallGoal: string): Promise<StepDetails> {
-  const response = await fetch(`${API_BASE_URL}/roadmap/step-details`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap/step-details`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

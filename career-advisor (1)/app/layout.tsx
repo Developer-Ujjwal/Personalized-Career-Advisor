@@ -10,7 +10,6 @@ import { Suspense } from "react"
 export const metadata: Metadata = {
   title: "CareerPath - AI Career Advisor",
   description: "Discover your perfect career with AI-powered guidance",
-  generator: "v0.app",
 }
 
 export default function RootLayout({
