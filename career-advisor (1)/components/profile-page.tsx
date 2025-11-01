@@ -1,105 +1,163 @@
-"use client";
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useRouter } from "next/navigation";
+"use client"
 
-interface UserProfile {
-  email: string;
-  // Add other user details you want to display
-}
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Mail, Phone, MapPin, Award, BookOpen, Target, LogOut } from "lucide-react"
 
-interface HexacoScores {
-  honesty_humility: number;
-  emotionality: number;
-  extraversion: number;
-  agreeableness: number;
-  conscientiousness: number;
-  openness_to_experience: number;
-}
+export function ProfilePage() {
+  const [isEditing, setIsEditing] = useState(false)
 
-const ProfilePage: React.FC = () => {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [hexacoScores, setHexacoScores] = useState<HexacoScores | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchProfileData = async () => {
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        router.push('/auth'); // Redirect to login if no token
-        return;
-      }
-
-      try {
-        // Fetch user profile (you might need a new endpoint for this)
-        // For now, let's assume we can get email from the token or a generic user endpoint
-        // Or, if the backend sends user details with hexaco scores, we can use that.
-        // For simplicity, let's assume a /me endpoint or similar exists.
-        const userResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setUserProfile(userResponse.data);
-
-        // Fetch HEXACO scores
-        const hexacoResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/hexaco_scores`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setHexacoScores(hexacoResponse.data);
-      } catch (err) {
-        console.error('Error fetching profile data:', err);
-        setError('Failed to load profile data.');
-        // Optionally redirect to login if token is invalid
-        if (axios.isAxiosError(err) && err.response?.status === 401) {
-          router.push('/auth');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, [router]);
-
-  if (loading) {
-    return <div className="p-4">Loading profile...</div>;
-  }
-
-  if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
-  }
-
-  if (!userProfile) {
-    return <div className="p-4">No user profile found.</div>;
+  // Mock user data - in a real app, this would come from a database/auth service
+  const userProfile = {
+    name: "Alex Johnson",
+    email: "alex.johnson@email.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    headline: "Aspiring Full Stack Developer",
+    bio: "Passionate about building scalable web applications and learning new technologies.",
+    hexacoProfile: {
+      honesty: 7,
+      emotionality: 5,
+      extraversion: 8,
+      agreeableness: 6,
+      conscientiousness: 8,
+      openness: 9,
+    },
+    completedCourses: ["HTML Fundamentals", "CSS Mastery", "JavaScript Basics"],
+    inProgressCourses: ["React Development", "Node.js Backend"],
+    targetRole: "Full Stack Developer",
+    joinedDate: "November 2024",
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">User Profile</h1>
-      <p><strong>Email:</strong> {userProfile.email}</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-24 pb-12">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                {userProfile.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-foreground mb-2">{userProfile.name}</h1>
+                <p className="text-lg text-muted-foreground mb-1">{userProfile.headline}</p>
+                <p className="text-sm text-muted-foreground">Member since {userProfile.joinedDate}</p>
+              </div>
+            </div>
+            <Button onClick={() => setIsEditing(!isEditing)} variant="default" className="rounded-full">
+              {isEditing ? "Save Changes" : "Edit Profile"}
+            </Button>
+          </div>
 
-      {hexacoScores ? (
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-3">HEXACO Scores</h2>
-          <ul>
-            <li><strong>Honesty-Humility:</strong> {hexacoScores.honesty_humility}</li>
-            <li><strong>Emotionality:</strong> {hexacoScores.emotionality}</li>
-            <li><strong>Extraversion:</strong> {hexacoScores.extraversion}</li>
-            <li><strong>Agreeableness:</strong> {hexacoScores.agreeableness}</li>
-            <li><strong>Conscientiousness:</strong> {hexacoScores.conscientiousness}</li>
-            <li><strong>Openness to Experience:</strong> {hexacoScores.openness_to_experience}</li>
-          </ul>
+          {/* Quick Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Mail className="w-5 h-5 text-purple-500" />
+              <span>{userProfile.email}</span>
+            </div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Phone className="w-5 h-5 text-pink-500" />
+              <span>{userProfile.phone}</span>
+            </div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              <span>{userProfile.location}</span>
+            </div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <Target className="w-5 h-5 text-green-500" />
+              <span>Target: {userProfile.targetRole}</span>
+            </div>
+          </div>
         </div>
-      ) : (
-        <p className="mt-6">No HEXACO scores found. Please complete the personality quiz.</p>
-      )}
-    </div>
-  );
-};
 
-export default ProfilePage;
+        {/* Bio Section */}
+        <Card className="p-6 mb-8 bg-white/50 backdrop-blur border-purple-200">
+          <h2 className="text-xl font-semibold text-foreground mb-3">About</h2>
+          <p className="text-muted-foreground leading-relaxed">{userProfile.bio}</p>
+        </Card>
+
+        {/* HEXACO Profile */}
+        <Card className="p-6 mb-8 bg-white/50 backdrop-blur border-purple-200">
+          <h2 className="text-xl font-semibold text-foreground mb-4">HEXACO Personality Profile</h2>
+          <div className="space-y-4">
+            {Object.entries(userProfile.hexacoProfile).map(([trait, score]) => (
+              <div key={trait}>
+                <div className="flex justify-between mb-2">
+                  <label className="text-sm font-medium text-foreground capitalize">
+                    {trait === "honesty"
+                      ? "Honesty-Humility"
+                      : trait === "emotionality"
+                        ? "Emotionality"
+                        : trait === "extraversion"
+                          ? "Extraversion"
+                          : trait === "agreeableness"
+                            ? "Agreeableness"
+                            : trait === "conscientiousness"
+                              ? "Conscientiousness"
+                              : "Openness to Experience"}
+                  </label>
+                  <span className="text-sm font-semibold text-purple-600">{score}/10</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                    style={{ width: `${(score / 10) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Learning Progress */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Completed Courses */}
+          <Card className="p-6 bg-white/50 backdrop-blur border-green-200">
+            <div className="flex items-center gap-3 mb-4">
+              <Award className="w-6 h-6 text-green-500" />
+              <h3 className="text-lg font-semibold text-foreground">Completed Courses</h3>
+            </div>
+            <div className="space-y-2">
+              {userProfile.completedCourses.map((course) => (
+                <div key={course} className="p-3 bg-green-50 rounded-lg text-sm text-green-700 border border-green-200">
+                  ✓ {course}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* In Progress Courses */}
+          <Card className="p-6 bg-white/50 backdrop-blur border-blue-200">
+            <div className="flex items-center gap-3 mb-4">
+              <BookOpen className="w-6 h-6 text-blue-500" />
+              <h3 className="text-lg font-semibold text-foreground">In Progress</h3>
+            </div>
+            <div className="space-y-2">
+              {userProfile.inProgressCourses.map((course) => (
+                <div key={course} className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-200">
+                  → {course}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Logout Button */}
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            className="rounded-full gap-2 text-red-600 border-red-200 hover:bg-red-50 bg-transparent"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

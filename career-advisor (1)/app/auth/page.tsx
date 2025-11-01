@@ -28,7 +28,7 @@ export default function AuthPage() {
       : { "Content-Type": "application/x-www-form-urlencoded" }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/register`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${authEndpoint}`, {
         method: "POST",
         headers,
         body,
