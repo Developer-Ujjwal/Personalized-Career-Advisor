@@ -37,7 +37,7 @@ class User(BaseModel):
     username: str
     email: str
     hashed_password: str
-    conversation_history: List[str] = []
+    conversation_history: List[Dict[str, Any]] = []
     hexaco_scores: Optional[HexacoScores] = None
     user_profile: Dict = {
         "interests": [],

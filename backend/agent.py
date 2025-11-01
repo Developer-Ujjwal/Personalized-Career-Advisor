@@ -122,7 +122,7 @@ class DynamicCareerGuidanceAgent:
             print("Error extracting career keywords:", e)
             return []
 
-    def generate_recommendations(self, user_profile: dict, hexaco_scores: HexacoScores = None) -> str:
+    def generate_recommendations(self, user_profile: dict, hexaco_scores: HexacoScores = None) -> CareerRecommendationsResponse:
         """Generate career recommendations based on the user profile and personality type"""
         try:
             print(f"User Profile: {user_profile}")
@@ -161,10 +161,11 @@ class DynamicCareerGuidanceAgent:
             elif not response.text.startswith('{') or not response.text.endswith('}'):
                 raise Exception("Invalid JSON response from Gemini")
             else:
-                recommendations = json.loads(response.text)
-        
+                recommendations_dict = json.loads(response.text)
+                recommendations = CareerRecommendationsResponse(**recommendations_dict)
+
             print(recommendations)
-        
+
             return recommendations
         
         except Exception as e:
@@ -174,7 +175,7 @@ class DynamicCareerGuidanceAgent:
                 print("Gemini returned an invalid JSON response")
             else:
                 print("An error occurred:", e)
-            return "I apologize, but I'm having trouble generating recommendations at the moment. Please try again later."
+            return CareerRecommendationsResponse(recommendations=[], additional_advice="I apologize, but I'm having trouble generating recommendations at the moment. Please try again later.")
 
 if __name__ == "__main__":
     agent = DynamicCareerGuidanceAgent()

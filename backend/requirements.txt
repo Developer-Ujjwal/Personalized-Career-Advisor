@@ -9,3 +9,6 @@ bcrypt==3.2.0
 python-dotenv
 pytrends
 PyJWT
+cloud-sql-python-connector[pg8000]
+psycopg2-binary
+sqlalchemy
