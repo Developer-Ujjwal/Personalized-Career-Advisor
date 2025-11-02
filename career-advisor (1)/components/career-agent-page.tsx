@@ -369,7 +369,6 @@ export function CareerAgentPage() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-
       const roadmapData = await response.json()
       localStorage.setItem("current_roadmap", JSON.stringify(roadmapData))
       window.location.href = `/career-roadmap?career=${encodeURIComponent(careerName)}`
@@ -392,6 +391,7 @@ export function CareerAgentPage() {
   }
 
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex">
       {/* Sidebar */}
       <div className={`${sidebarOpen ? "w-64" : "w-0"} transition-all duration-300 border-r bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col`}>
@@ -535,21 +535,21 @@ export function CareerAgentPage() {
               ))}
 
               {isTyping && (
-                <div className="flex gap-3 justify-start">
-                  <Avatar className="w-12 h-12 bg-primary">
+                <div className="flex gap-2 sm:gap-3 justify-start">
+                  <Avatar className="w-8 h-8 sm:w-12 sm:h-12 bg-primary">
                     <AvatarFallback>
-                      <Bot className="w-6 h-6 text-primary-foreground" />
+                      <Bot className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-card border shadow-lg rounded-2xl px-4 py-3">
+                  <div className="bg-card border shadow-lg rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce" />
                       <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.1s" }}
                       />
                       <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.2s" }}
                       />
                     </div>
