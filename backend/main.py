@@ -7,10 +7,11 @@ import os
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from agent import DynamicCareerGuidanceAgent
 from roadmap_agent import RoadmapAgent
-from model import User, UserCreate, UserResponse, AnswerRequest, HexacoScores, Roadmap, RoadmapRequest, RoadmapStep, StepDetailsRequest
-from db import get_db, init_db, DBUser, DBHexacoScores, DBRoadmap
+from model import User, UserCreate, UserResponse, AnswerRequest, HexacoScores, HollandScores, Roadmap, RoadmapRequest, RoadmapStep, StepDetailsRequest, Conversation, ConversationCreate, ConversationResponse, GenerateRecommendationsRequest, Message
+from db import get_db, init_db, DBUser, DBHexacoScores, DBHollandScores, DBRoadmap, DBConversation
 import uuid
 
 # Password hashing
@@ -80,6 +81,18 @@ class CareerGuidanceRouter:
                     conscientiousness=db_hexaco.conscientiousness,
                     openness_to_experience=db_hexaco.openness_to_experience
                 )
+            
+            # Get holland scores if they exist
+            db_holland = db.query(DBHollandScores).filter(DBHollandScores.user_id == db_user.id).first()
+            if db_holland:
+                user.holland_scores = HollandScores(
+                    realistic=db_holland.realistic,
+                    investigative=db_holland.investigative,
+                    artistic=db_holland.artistic,
+                    social=db_holland.social,
+                    enterprising=db_holland.enterprising,
+                    conventional=db_holland.conventional
+                )
                 
             return user
         except jwt.PyJWTError:
@@ -141,73 +154,316 @@ class CareerGuidanceRouter:
         
         return {"message": "User created successfully"}
 
-    async def get_next_question(self, current_user: User = Depends(get_current_user)):
-        # Generate next question based on user's conversation history
-        question = self.agent.generate_question(current_user.conversation_history, current_user.hexaco_scores)
-        current_user.conversation_history.append({
-            "role": "user",
+    async def get_next_question(self, conversation_id: str, current_user: User, db: Session):
+        # Get conversation from database
+        db_conversation = db.query(DBConversation).filter(
+            DBConversation.id == conversation_id,
+            DBConversation.user_id == current_user.id
+        ).first()
+        
+        if not db_conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Initialize conversation history if empty
+        if not db_conversation.conversation_history:
+            db_conversation.conversation_history = [{"role": "system", "parts": [self.agent.system_prompt]}]
+            flag_modified(db_conversation, "conversation_history")
+        
+        # Generate next question
+        question = self.agent.generate_question(
+            db_conversation.conversation_history,
+            current_user.hexaco_scores,
+            current_user.holland_scores
+        )
+        
+        # Initialize messages array if needed
+        if not db_conversation.messages:
+            db_conversation.messages = []
+            flag_modified(db_conversation, "messages")
+        
+        # Add agent message to messages array
+        agent_message = {
+            "id": str(uuid.uuid4()),
+            "type": "agent",
+            "content": question,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db_conversation.messages.append(agent_message)
+        flag_modified(db_conversation, "messages")
+        
+        db_conversation.conversation_history.append({
+            "role": "assistant",
             "parts": [question]
         })
+        flag_modified(db_conversation, "conversation_history")
+        
+        db_conversation.updated_at = datetime.utcnow()
+        db.commit()
+        
         return UserResponse(question=question)
 
-    async def submit_answer(self, answer: str, current_user: User, db: Session):
-        # Update user's conversation history and profile
-        current_user.conversation_history.append({
+    async def submit_answer(self, answer: str, conversation_id: str, current_user: User, db: Session):
+        # Get conversation from database
+        db_conversation = db.query(DBConversation).filter(
+            DBConversation.id == conversation_id,
+            DBConversation.user_id == current_user.id
+        ).first()
+        
+        if not db_conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Update conversation history
+        if not db_conversation.conversation_history:
+            db_conversation.conversation_history = [{"role": "system", "parts": [self.agent.system_prompt]}]
+            flag_modified(db_conversation, "conversation_history")
+        
+        # Initialize messages array if needed
+        if not db_conversation.messages:
+            db_conversation.messages = []
+            flag_modified(db_conversation, "messages")
+        
+        # Add user message to messages array
+        user_message = {
+            "id": str(uuid.uuid4()),
+            "type": "user",
+            "content": answer,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db_conversation.messages.append(user_message)
+        flag_modified(db_conversation, "messages")
+        
+        db_conversation.conversation_history.append({
             "role": "user",
             "parts": [answer]
         })
+        flag_modified(db_conversation, "conversation_history")
         
         # Extract profile information
-        response = self.agent.extract_profile_info(
-            current_user.conversation_history[-1]["parts"][0],  # Last question
-            answer
-        )
+        last_question = ""
+        if len(db_conversation.conversation_history) >= 2:
+            last_item = db_conversation.conversation_history[-2]
+            if last_item.get("role") == "assistant" or last_item.get("role") == "user":
+                last_question = last_item.get("parts", [""])[0] if last_item.get("parts") else ""
+        
+        response = self.agent.extract_profile_info(last_question, answer)
         
         if response is not None:
-            for key, value in response.items():
-                if key in current_user.user_profile:
-                    if isinstance(value, list):
-                        current_user.user_profile[key].extend(value)
-                    elif isinstance(value, str) and value:
-                        if key in ["education_level", "experience_level"]:
-                            current_user.user_profile[key] = value
-                        else:
-                            current_user.user_profile[key].append(value)
-        
-        # Update database with new conversation history and profile
-        db_user = db.query(DBUser).filter(DBUser.id == current_user.id).first()
-        if db_user:
-            db_user.conversation_history = current_user.conversation_history
-            db_user.user_profile = current_user.user_profile
-            db.commit()
-        
-        # Generate next question or recommendations
-        if len(current_user.conversation_history) >= 10:
-            recommendations = self.agent.generate_recommendations(
-                current_user.user_profile,
-                current_user.hexaco_scores
-            )
+            if not db_conversation.user_profile:
+                db_conversation.user_profile = {
+                    "interests": [],
+                    "skills": [],
+                    "personality_traits": [],
+                    "values": [],
+                    "education_status": "",
+                    "current_grade": "",
+                    "field_of_study": "",
+                    "experience_level": "",
+                    "dislikes": []
+                }
+                flag_modified(db_conversation, "user_profile")
             
-            # Save recommendations to database
-            if db_user:
-                db_user.career_recommendations = [rec.model_dump() for rec in recommendations.recommendations]
-                db_user.additional_advice = recommendations.additional_advice
-                db.commit()
-                
-            return recommendations
+            profile_updated = False
+            for key, value in response.items():
+                if key in db_conversation.user_profile:
+                    if isinstance(value, list):
+                        if value:  # Only update if list is not empty
+                            db_conversation.user_profile[key].extend(value)
+                            profile_updated = True
+                    elif isinstance(value, str) and value:
+                        if key in ["education_level", "experience_level", "education_status", "current_grade", "field_of_study"]:
+                            db_conversation.user_profile[key] = value
+                            profile_updated = True
+                        else:
+                            if isinstance(db_conversation.user_profile[key], list):
+                                db_conversation.user_profile[key].append(value)
+                                profile_updated = True
+            
+            if profile_updated:
+                flag_modified(db_conversation, "user_profile")
         
-        next_question = self.agent.generate_question(current_user.conversation_history, current_user.hexaco_scores)
-        current_user.conversation_history.append({
-            "role": "user",
+        # Update conversation timestamp
+        db_conversation.updated_at = datetime.utcnow()
+        db.commit()
+        
+        # Generate next question (no automatic recommendations)
+        next_question = self.agent.generate_question(
+            db_conversation.conversation_history,
+            current_user.hexaco_scores,
+            current_user.holland_scores
+        )
+        
+        # Add agent message to messages array
+        agent_message = {
+            "id": str(uuid.uuid4()),
+            "type": "agent",
+            "content": next_question,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        db_conversation.messages.append(agent_message)
+        flag_modified(db_conversation, "messages")
+        
+        db_conversation.conversation_history.append({
+            "role": "assistant",
             "parts": [next_question]
         })
+        flag_modified(db_conversation, "conversation_history")
         
-        # Update database with new question
-        if db_user:
-            db_user.conversation_history = current_user.conversation_history
-            db.commit()
+        # Update database
+        db_conversation.updated_at = datetime.utcnow()
+        db.commit()
             
         return UserResponse(question=next_question)
+    
+    async def create_conversation(self, title: str, current_user: User, db: Session):
+        """Create a new conversation for the user"""
+        conversation_id = str(uuid.uuid4())
+        
+        db_conversation = DBConversation(
+            id=conversation_id,
+            user_id=current_user.id,
+            title=title or "New Chat",
+            messages=[],
+            conversation_history=[{"role": "system", "parts": [self.agent.system_prompt]}],
+            user_profile={
+                "interests": [],
+                "skills": [],
+                "personality_traits": [],
+                "values": [],
+                "education_status": "",
+                "current_grade": "",
+                "field_of_study": "",
+                "experience_level": "",
+                "dislikes": []
+            },
+            career_recommendations=[],
+            additional_advice="",
+            influence_breakdown={},
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        
+        db.add(db_conversation)
+        db.commit()
+        db.refresh(db_conversation)
+        
+        return ConversationResponse(
+            id=db_conversation.id,
+            title=db_conversation.title,
+            created_at=db_conversation.created_at.isoformat() if db_conversation.created_at else None,
+            updated_at=db_conversation.updated_at.isoformat() if db_conversation.updated_at else None
+        )
+    
+    async def list_conversations(self, current_user: User, db: Session):
+        """List all conversations for the user"""
+        db_conversations = db.query(DBConversation).filter(
+            DBConversation.user_id == current_user.id
+        ).order_by(DBConversation.updated_at.desc()).all()
+        
+        return [
+            ConversationResponse(
+                id=conv.id,
+                title=conv.title,
+                created_at=conv.created_at.isoformat() if conv.created_at else None,
+                updated_at=conv.updated_at.isoformat() if conv.updated_at else None
+            )
+            for conv in db_conversations
+        ]
+    
+    async def get_conversation(self, conversation_id: str, current_user: User, db: Session):
+        """Get a specific conversation with all its data"""
+        db_conversation = db.query(DBConversation).filter(
+            DBConversation.id == conversation_id,
+            DBConversation.user_id == current_user.id
+        ).first()
+        
+        if not db_conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Convert messages from conversation_history to Message format
+        messages = []
+        for i, item in enumerate(db_conversation.conversation_history or []):
+            if item.get("role") == "assistant" or item.get("role") == "user":
+                role = item.get("role")
+                if role == "assistant":
+                    role = "agent"
+                content = item.get("parts", [""])[0] if item.get("parts") else ""
+                if content and role != "system":
+                    messages.append({
+                        "id": str(i),
+                        "type": role,
+                        "content": content,
+                        "timestamp": datetime.utcnow().isoformat()
+                    })
+        
+        return Conversation(
+            id=db_conversation.id,
+            user_id=db_conversation.user_id,
+            title=db_conversation.title,
+            messages=[Message(**msg) for msg in messages],
+            conversation_history=db_conversation.conversation_history or [],
+            user_profile=db_conversation.user_profile or {},
+            career_recommendations=db_conversation.career_recommendations or [],
+            additional_advice=db_conversation.additional_advice or "",
+            influence_breakdown=db_conversation.influence_breakdown or {},
+            created_at=db_conversation.created_at.isoformat() if db_conversation.created_at else None,
+            updated_at=db_conversation.updated_at.isoformat() if db_conversation.updated_at else None
+        )
+    
+    async def generate_recommendations_for_conversation(self, conversation_id: str, current_user: User, db: Session):
+        """Manually generate recommendations for a conversation"""
+        db_conversation = db.query(DBConversation).filter(
+            DBConversation.id == conversation_id,
+            DBConversation.user_id == current_user.id
+        ).first()
+        
+        if not db_conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Get hexaco and holland scores from user
+        db_hexaco = db.query(DBHexacoScores).filter(DBHexacoScores.user_id == current_user.id).first()
+        db_holland = db.query(DBHollandScores).filter(DBHollandScores.user_id == current_user.id).first()
+        
+        hexaco_scores = None
+        if db_hexaco:
+            hexaco_scores = HexacoScores(
+                honesty_humility=db_hexaco.honesty_humility,
+                emotionality=db_hexaco.emotionality,
+                extraversion=db_hexaco.extraversion,
+                agreeableness=db_hexaco.agreeableness,
+                conscientiousness=db_hexaco.conscientiousness,
+                openness_to_experience=db_hexaco.openness_to_experience
+            )
+        
+        holland_scores = None
+        if db_holland:
+            holland_scores = HollandScores(
+                realistic=db_holland.realistic,
+                investigative=db_holland.investigative,
+                artistic=db_holland.artistic,
+                social=db_holland.social,
+                enterprising=db_holland.enterprising,
+                conventional=db_holland.conventional
+            )
+        
+        # Generate recommendations
+        recommendations = self.agent.generate_recommendations(
+            db_conversation.user_profile or {},
+            hexaco_scores,
+            holland_scores
+        )
+        
+        # Save recommendations to conversation
+        db_conversation.career_recommendations = [rec.model_dump() for rec in recommendations.recommendations]
+        flag_modified(db_conversation, "career_recommendations")
+        
+        db_conversation.additional_advice = recommendations.additional_advice
+        db_conversation.influence_breakdown = recommendations.influence_breakdown
+        flag_modified(db_conversation, "influence_breakdown")
+        
+        db_conversation.updated_at = datetime.utcnow()
+        db.commit()
+        
+        return recommendations
 
 # Initialize router
 career_router = CareerGuidanceRouter()
@@ -233,8 +489,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/question")
-async def get_question(current_user: User = Depends(career_router.get_current_user)):
-    response = await career_router.get_next_question(current_user)
+async def get_question(
+    conversation_id: str,
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    response = await career_router.get_next_question(conversation_id, current_user, db)
     return response
 
 @app.post("/answer")
@@ -243,7 +503,7 @@ async def submit_answer(
     current_user: User = Depends(career_router.get_current_user),
     db: Session = Depends(get_db)
 ):
-    response = await career_router.submit_answer(answer.answer, current_user, db)
+    response = await career_router.submit_answer(answer.answer, answer.conversation_id, current_user, db)
     return response
 
 @app.get("/profile")
@@ -291,6 +551,46 @@ async def get_hexaco_scores(current_user: User = Depends(career_router.get_curre
         return current_user.hexaco_scores
     raise HTTPException(status_code=404, detail="HEXACO scores not found for this user")
 
+@app.post("/holland_scores")
+async def set_holland_scores(holland_scores: HollandScores, current_user: User = Depends(career_router.get_current_user), db: Session = Depends(get_db)):
+    # Update the user model
+    current_user.holland_scores = holland_scores
+    
+    # Check if holland scores already exist for this user
+    db_holland = db.query(DBHollandScores).filter(DBHollandScores.user_id == current_user.id).first()
+    
+    if db_holland:
+        # Update existing scores
+        db_holland.realistic = holland_scores.realistic
+        db_holland.investigative = holland_scores.investigative
+        db_holland.artistic = holland_scores.artistic
+        db_holland.social = holland_scores.social
+        db_holland.enterprising = holland_scores.enterprising
+        db_holland.conventional = holland_scores.conventional
+    else:
+        # Create new scores
+        db_holland = DBHollandScores(
+            id=str(uuid.uuid4()),
+            user_id=current_user.id,
+            realistic=holland_scores.realistic,
+            investigative=holland_scores.investigative,
+            artistic=holland_scores.artistic,
+            social=holland_scores.social,
+            enterprising=holland_scores.enterprising,
+            conventional=holland_scores.conventional
+        )
+        db.add(db_holland)
+    
+    # Commit changes
+    db.commit()
+    
+    return {"message": "Holland RIASEC scores set successfully"}
+
+@app.get("/holland_scores")
+async def get_holland_scores(current_user: User = Depends(career_router.get_current_user)):
+    if current_user.holland_scores:
+        return current_user.holland_scores
+    raise HTTPException(status_code=404, detail="Holland RIASEC scores not found for this user")
 
 @app.get("/users/me", response_model=User)
 async def read_users_me(current_user: User = Depends(career_router.get_current_user)):
@@ -324,3 +624,35 @@ async def get_roadmap_step_details(step_details_request: StepDetailsRequest, cur
 @app.post("/roadmap/step-details")
 async def get_roadmap_step_details(step_details_request: StepDetailsRequest, current_user: User = Depends(career_router.get_current_user)):
     return await career_router.get_roadmap_step_details(step_details_request)
+
+# Conversation endpoints
+@app.post("/conversations", response_model=ConversationResponse)
+async def create_conversation(
+    conversation: ConversationCreate,
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return await career_router.create_conversation(conversation.title or "New Chat", current_user, db)
+
+@app.get("/conversations", response_model=list[ConversationResponse])
+async def list_conversations(
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return await career_router.list_conversations(current_user, db)
+
+@app.get("/conversations/{conversation_id}", response_model=Conversation)
+async def get_conversation(
+    conversation_id: str,
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return await career_router.get_conversation(conversation_id, current_user, db)
+
+@app.post("/conversations/{conversation_id}/generate-recommendations")
+async def generate_recommendations(
+    conversation_id: str,
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return await career_router.generate_recommendations_for_conversation(conversation_id, current_user, db)

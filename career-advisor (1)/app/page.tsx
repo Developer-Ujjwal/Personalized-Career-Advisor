@@ -376,7 +376,7 @@ const Home: React.FC = () => {
                             <p className="mt-6 text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
                                 Find the career that fits your unique psychological DNA. Stop guessing and start building your future with confidence.
                             </p>
-                            <a href="#cta-button" className="mt-10 inline-block bg-white text-blue-600 px-10 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <a href="personality-entry" className="mt-10 inline-block bg-white text-blue-600 px-10 py-4 rounded-full text-lg font-semibold hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                 Start Your Free Assessment Now
                             </a>
                             <div className="mt-8">

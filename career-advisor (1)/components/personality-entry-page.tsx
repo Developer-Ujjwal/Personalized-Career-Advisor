@@ -21,7 +21,7 @@ export function PersonalityEntryPage() {
         />
       </div>
 
-      <div className="w-full max-w-2xl relative z-10">
+      <div className="w-full max-w-4xl relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-6">
@@ -37,17 +37,86 @@ export function PersonalityEntryPage() {
           </p>
         </div>
 
-        {/* Choice Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* I Know My Personality */}
-          <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl backdrop-blur-sm bg-card/80 border-2 hover:border-primary/50">
+        {/* Assessment Types Section */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-semibold text-center mb-6">Choose Your Assessment Path</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* HEXACO Assessment */}
+            <Card className="group transition-all duration-300 hover:shadow-xl backdrop-blur-sm bg-card/80 border-2 hover:border-primary/50">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                  <Brain className="w-8 h-8 text-primary" />
+                </div>
+                <CardTitle className="text-xl">HEXACO Personality</CardTitle>
+                <CardDescription className="text-base">
+                  Assess your personality across six key dimensions: Honesty-Humility, Emotionality, eXtraversion, Agreeableness, Conscientiousness, and Openness to Experience.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <Link href="/personality-quiz">
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-base border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 group bg-transparent"
+                    >
+                      Take HEXACO Quiz
+                      <Brain className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/hexaco-entry">
+                    <Button className="w-full h-12 text-base bg-primary hover:bg-primary/90 transition-all duration-300 group text-white shadow-lg">
+                      I Know My Scores
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Holland RIASEC Assessment */}
+            <Card className="group transition-all duration-300 hover:shadow-xl backdrop-blur-sm bg-card/80 border-2 hover:border-accent/50">
+              <CardHeader className="text-center pb-4">
+                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
+                  <Sparkles className="w-8 h-8 text-accent" />
+                </div>
+                <CardTitle className="text-xl">Holland RIASEC</CardTitle>
+                <CardDescription className="text-base">
+                  Discover your career interests with the Holland Code: Realistic, Investigative, Artistic, Social, Enterprising, and Conventional.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <Link href="/holland-riasec">
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-base border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 group bg-transparent"
+                    >
+                      Take RIASEC Quiz
+                      <HelpCircle className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="/holland-entry">
+                    <Button className="w-full h-12 text-base bg-accent hover:bg-accent/90 transition-all duration-300 group text-white shadow-lg">
+                      I Know My Scores
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Career Agent Section */}
+        <div className="mt-12">
+          <Card className="group transition-all duration-300 hover:shadow-xl backdrop-blur-sm bg-card/80 border-2 hover:border-purple-500/50">
             <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <Sparkles className="w-8 h-8 text-primary" />
+              <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-500/20 transition-colors">
+                <Sparkles className="w-8 h-8 text-purple-500" />
               </div>
-              <CardTitle className="text-xl">I Know My Type</CardTitle>
+              <CardTitle className="text-xl">Career Guidance Agent</CardTitle>
               <CardDescription className="text-base">
-                Already familiar with your personality type? Let's jump straight to career exploration.
+                Ready to explore career paths? Our AI agent will use your personality assessments to provide personalized recommendations.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
@@ -59,35 +128,8 @@ export function PersonalityEntryPage() {
               </Link>
               <div className="mt-4 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Perfect for those who know their HEXACO, Enneagram, or other personality types
+                  For best results, complete both personality assessments before using the Career Agent
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Take Personality Quiz */}
-          <Card className="group cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl backdrop-blur-sm bg-card/80 border-2 hover:border-accent/50">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
-                <HelpCircle className="w-8 h-8 text-accent" />
-              </div>
-              <CardTitle className="text-xl">Discover My Type</CardTitle>
-              <CardDescription className="text-base">
-                Not sure about your personality? Take our quick assessment to discover your unique traits.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Link href="/personality-quiz">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-base border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 group bg-transparent"
-                >
-                  Take Personality Quiz
-                  <Brain className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
-                </Button>
-              </Link>
-              <div className="mt-4 text-center">
-                <p className="text-sm text-muted-foreground">5-minute interactive quiz • Science-based results</p>
               </div>
             </CardContent>
           </Card>
@@ -96,8 +138,7 @@ export function PersonalityEntryPage() {
         {/* Bottom Info */}
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Both paths lead to personalized career recommendations tailored specifically for you. Choose the option that
-            feels most comfortable.
+            All assessments lead to personalized career recommendations tailored specifically for you. The more assessments you complete, the more accurate your recommendations will be.
           </p>
         </div>
       </div>

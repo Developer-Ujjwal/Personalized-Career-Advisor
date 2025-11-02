@@ -1,8 +1,9 @@
 import os
 import sqlalchemy
-from sqlalchemy import Column, String, Float, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, Float, ForeignKey, Text, JSON, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from datetime import datetime
 from google.cloud.sql.connector import Connector
 from dotenv import load_dotenv
 
@@ -56,6 +57,8 @@ class DBUser(Base):
     additional_advice = Column(Text, default="")
 
     hexaco_scores = relationship("DBHexacoScores", back_populates="user", uselist=False)
+    holland_scores = relationship("DBHollandScores", back_populates="user", uselist=False)
+    conversations = relationship("DBConversation", back_populates="user", cascade="all, delete-orphan")
 
 class DBHexacoScores(Base):
     __tablename__ = "hexaco_scores"
@@ -71,6 +74,20 @@ class DBHexacoScores(Base):
     
     user = relationship("DBUser", back_populates="hexaco_scores")
 
+class DBHollandScores(Base):
+    __tablename__ = "holland_scores"
+    
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    realistic = Column(Float, default=0.0)
+    investigative = Column(Float, default=0.0)
+    artistic = Column(Float, default=0.0)
+    social = Column(Float, default=0.0)
+    enterprising = Column(Float, default=0.0)
+    conventional = Column(Float, default=0.0)
+    
+    user = relationship("DBUser", back_populates="holland_scores")
+
 class DBRoadmap(Base):
     __tablename__ = "roadmaps"
     
@@ -82,6 +99,23 @@ class DBRoadmap(Base):
     edges = Column(JsonType, default=list)
 
     user = relationship("DBUser")
+
+class DBConversation(Base):
+    __tablename__ = "conversations"
+    
+    id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=False, default="New Chat")
+    messages = Column(JsonType, default=list)
+    conversation_history = Column(JsonType, default=list)
+    user_profile = Column(JsonType, default=dict)
+    career_recommendations = Column(JsonType, default=list)
+    additional_advice = Column(Text, default="")
+    influence_breakdown = Column(JsonType, default=dict)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = relationship("DBUser", back_populates="conversations")
 
 def get_db():
     db = SessionLocal()
