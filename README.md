@@ -69,4 +69,4 @@ This project addresses the problem with a **transparent, explainable, and holist
 ```bash
 git clone https://github.com/Developer-Ujjwal/Personalized-Career-Advisor.git
 cd Personalized-Career-Advisor
-Docker compose up -d
+docker compose up -d
