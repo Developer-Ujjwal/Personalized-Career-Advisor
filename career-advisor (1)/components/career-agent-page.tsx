@@ -255,8 +255,9 @@ export function CareerAgentPage() {
       }
 
       const roadmapData = await response.json();
-      // Store roadmapData in local storage or a global state management for the roadmap page to access
+      // Store roadmapData in local storage for the roadmap page to access
       localStorage.setItem("current_roadmap", JSON.stringify(roadmapData));
+      // Use Next.js router for navigation instead of direct window.location
       window.location.href = `/career-roadmap?career=${encodeURIComponent(careerName)}`;
     } catch (error) {
       console.error("Error generating roadmap:", error);
@@ -268,16 +269,16 @@ export function CareerAgentPage() {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex flex-col">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-primary rounded-2xl animate-pulse-glow">
-              <Bot className="w-8 h-8 text-primary-foreground" />
+        <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-3 bg-primary rounded-xl sm:rounded-2xl animate-pulse-glow">
+              <Bot className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Career Agent
               </h1>
-              <p className="text-base text-muted-foreground">Your AI-powered career discovery assistant</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Your AI-powered career discovery assistant</p>
             </div>
           </div>
         </div>
@@ -323,21 +324,21 @@ export function CareerAgentPage() {
               ))}
 
               {isTyping && (
-                <div className="flex gap-3 justify-start">
-                  <Avatar className="w-12 h-12 bg-primary">
+                <div className="flex gap-2 sm:gap-3 justify-start">
+                  <Avatar className="w-8 h-8 sm:w-12 sm:h-12 bg-primary">
                     <AvatarFallback>
-                      <Bot className="w-6 h-6 text-primary-foreground" />
+                      <Bot className="w-4 h-4 sm:w-6 sm:h-6 text-primary-foreground" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-card border shadow-lg rounded-2xl px-4 py-3">
+                  <div className="bg-card border shadow-lg rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce" />
                       <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.1s" }}
                       />
                       <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-muted-foreground rounded-full animate-bounce"
                         style={{ animationDelay: "0.2s" }}
                       />
                     </div>

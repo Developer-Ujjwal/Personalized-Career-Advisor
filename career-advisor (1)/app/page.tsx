@@ -65,24 +65,26 @@ const Home: React.FC = () => {
             */}
             <div className="bg-white text-gray-800 antialiased">
                 {/* Header */}
-                <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
-                    <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                            Project Synapse
+                <header className="bg-white shadow-sm">
+                <div className="container mx-auto px-4 sm:px-6 py-4">
+                    <nav className="flex justify-between items-center">
+                        <div className="flex items-center">
+                            <img src="/placeholder-logo.svg" alt="CareerPath Logo" className="h-8 sm:h-10 w-auto" />
+                            <span className="ml-2 sm:ml-3 text-lg sm:text-xl font-bold text-gray-800">CareerPath</span>
                         </div>
-                        {/* Navigation Links for larger screens */}
-                        <div className="hidden md:flex space-x-6 items-center">
+                        <div className="hidden md:flex space-x-4 lg:space-x-8 items-center">
                             <a href="#problem" className={getNavLinkClass('problem')}>The Problem</a>
                             <a href="#science" className={getNavLinkClass('science')}>Our Science</a>
                             <a href="#how" className={getNavLinkClass('how')}>How It Works</a>
                             <a href="#ethics" className={getNavLinkClass('ethics')}>Our Ethics</a>
-                            <a href="#cta" className="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition-shadow shadow-md">Start Free Assessment</a>
+                            <a href="#cta" className="bg-blue-600 text-white px-3 sm:px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition-shadow shadow-md text-sm sm:text-base">Start Free Assessment</a>
                         </div>
                         {/* Mobile Menu Button */}
                         <button 
                             id="mobile-menu-btn" 
                             className="md:hidden text-gray-700"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} // Toggle state on click
+                            aria-label="Toggle menu"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
@@ -90,28 +92,29 @@ const Home: React.FC = () => {
                         </button>
                     </nav>
                     {/* Mobile Menu - visibility controlled by state */}
-                    <div id="mobile-menu" className={`${isMobileMenuOpen ? '' : 'hidden'} md:hidden px-6 pb-4 space-y-2`}>
+                    <div id="mobile-menu" className={`${isMobileMenuOpen ? '' : 'hidden'} md:hidden px-4 sm:px-6 pb-4 space-y-2 mt-2`}>
                         <a href="#problem" className={getMobileNavLinkClass('problem')}>The Problem</a>
                         <a href="#science" className={getMobileNavLinkClass('science')}>Our Science</a>
                         <a href="#how" className={getMobileNavLinkClass('how')}>How It Works</a>
                         <a href="#ethics" className={getMobileNavLinkClass('ethics')}>Our Ethics</a>
                         <a href="#cta" className="block bg-blue-600 text-white text-center px-5 py-2 rounded-full font-medium hover:bg-blue-700 mt-2">Start Free Assessment</a>
                     </div>
-                </header>
+                </div>
+            </header>
 
                 <main>
                     {/* 1. Hero Section */}
-                    <section id="hero" className="container mx-auto px-6 py-20 md:py-32">
-                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                    <section id="hero" className="container mx-auto px-4 sm:px-6 py-16 sm:py-20 md:py-32">
+                        <div className="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
                             {/* Hero Text Content */}
                             <div className="text-center md:text-left">
-                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold !leading-tight tracking-tight text-gray-900">
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold !leading-tight tracking-tight text-gray-900">
                                     Career Guidance Built on <span className="text-blue-600">Science</span>, Not Pseudoscience.
                                 </h1>
-                                <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-xl mx-auto md:mx-0">
+                                <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-gray-600 max-w-xl mx-auto md:mx-0">
                                     Project Synapse is India's first AI-powered career advisor built on the scientifically validated HEXACO and RIASEC models. Stop guessing, start planning.
                                 </p>
-                                <a href="#cta" className="mt-10 inline-block bg-blue-600 text-white px-10 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <a href="#cta" className="mt-6 sm:mt-10 inline-block bg-blue-600 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                                     Start Your Free Assessment
                                 </a>
                             </div>

@@ -31,25 +31,25 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-24 pb-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-16 sm:pt-20 md:pt-24 pb-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-4 sm:mb-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg mx-auto sm:mx-0">
                 {userProfile.name
                   .split(" ")
                   .map((n) => n[0])
                   .join("")}
               </div>
-              <div>
-                <h1 className="text-4xl font-bold text-foreground mb-2">{userProfile.name}</h1>
-                <p className="text-lg text-muted-foreground mb-1">{userProfile.headline}</p>
-                <p className="text-sm text-muted-foreground">Member since {userProfile.joinedDate}</p>
+              <div className="text-center sm:text-left mt-2 sm:mt-0">
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">{userProfile.name}</h1>
+                <p className="text-base sm:text-lg text-muted-foreground mb-1">{userProfile.headline}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Member since {userProfile.joinedDate}</p>
               </div>
             </div>
-            <Button onClick={() => setIsEditing(!isEditing)} variant="default" className="rounded-full">
+            <Button onClick={() => setIsEditing(!isEditing)} variant="default" className="rounded-full w-full sm:w-auto mt-2 sm:mt-0">
               {isEditing ? "Save Changes" : "Edit Profile"}
             </Button>
           </div>
