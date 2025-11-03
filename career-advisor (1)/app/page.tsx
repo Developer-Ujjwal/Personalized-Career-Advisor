@@ -71,14 +71,19 @@ const Home: React.FC = () => {
               The <html> and <body> tags are handled by Next.js in layout.tsx.
               This component just returns the page content.
             */}
-            <div className="bg-white text-gray-800 antialiased">
+            <div className="bg-white text-gray-800 md:-mt-15 antialiased">
                 {/* Header */}
                 <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 sm:px-6 py-4">
                     <nav className="flex justify-between items-center">
                         <div className="flex items-center">
-                            <img src="/placeholder-logo.svg" alt="CareerPath Logo" className="h-8 sm:h-10 w-auto" />
-                            <span className="ml-2 sm:ml-3 text-lg sm:text-xl font-bold text-gray-800">CareerPath</span>
+                <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+                    <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                            Project Synapse
+                        </div>
+                    </nav>  
+                </header>
                         </div>
                         <div className="hidden md:flex space-x-4 lg:space-x-8 items-center">
                             <a href="#problem" className={getNavLinkClass('problem')}>The Problem</a>

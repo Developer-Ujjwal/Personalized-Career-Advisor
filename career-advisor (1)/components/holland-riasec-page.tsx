@@ -5,6 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle } from "lucide-react";
 import axios from "axios";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import  Link  from "next/link";
+
+
 
 interface HollandQuestion {
   id: number;
@@ -218,9 +222,37 @@ export function HollandRiasecPage() {
                 </div>
               </div>
               <div className="text-center pt-4">
-                <Button onClick={() => setShowResult(false)} className="w-full">
-                  Retake Test
-                </Button>
+                <div className="w-full grid grid-cols-2 gap-4">
+                  <Button 
+                    onClick={() => {
+                      setShowResult(false);
+                      setCurrentQuestion(0);
+                      setAnswers({});
+                    }}
+                    variant="outline" 
+                    className="w-full gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Retake Test
+                  </Button>
+                  <Link href="/career-agent">
+                    <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
+                      Continue to Career Agent
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <div className="text-center pt-4">
+                <Link href="/personality-entry">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -250,29 +282,50 @@ export function HollandRiasecPage() {
           </CardHeader>
           <CardContent>
             <p className="text-xl font-semibold mb-6 text-center">{currentQ.text}</p>
-            <div className="grid grid-cols-1 gap-3">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <Button
-                  key={value}
-                  variant={answers[currentQ.id] === value ? "default" : "outline"}
-                  onClick={() => handleAnswer(value)}
-                  className="py-3 text-base"
-                >
-                  {value === 1 && "Strongly Disagree"}
-                  {value === 2 && "Disagree"}
-                  {value === 3 && "Neutral"}
-                  {value === 4 && "Agree"}
-                  {value === 5 && "Strongly Agree"}
-                </Button>
-              ))}
+            {/* Likert Scale */}
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Strongly Disagree</span>
+                <span>Strongly Agree</span>
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Button
+                    key={value}
+                    onClick={() => handleAnswer(value)}
+                    variant={answers[currentQ.id] === value ? "default" : "outline"}
+                    className={`flex-1 py-3 text-base ${
+                      answers[currentQ.id] === value
+                        ? "bg-primary border-primary text-primary-foreground shadow-lg"
+                        : "border-border hover:border-primary/50 bg-background"
+                    }`}
+                  >
+                    {value === 1 && "Strongly Disagree"}
+                    {value === 2 && "Disagree"}
+                    {value === 3 && "Neutral"}
+                    {value === 4 && "Agree"}
+                    {value === 5 && "Strongly Agree"}
+                  </Button>
+                ))}
+              </div>
             </div>
             <div className="flex justify-between mt-6">
-              <Button onClick={handlePrevious} disabled={currentQuestion === 0} variant="outline">
-                Previous
-              </Button>
-              <Button onClick={handleNext} disabled={answers[currentQ.id] === undefined}>
-                {currentQuestion === hollandQuestions.length - 1 ? "Finish" : "Next"}
-              </Button>
+              <Link href="/personality-entry">
+                <Button variant="outline" className="gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Button>
+              </Link>
+              <div className="flex gap-2">
+                <Button onClick={handlePrevious} disabled={currentQuestion === 0} variant="outline">
+                  <ArrowLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                <Button onClick={handleNext} disabled={answers[currentQ.id] === undefined}>
+                  {currentQuestion === hollandQuestions.length - 1 ? "Finish" : "Next"}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

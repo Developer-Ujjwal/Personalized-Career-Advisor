@@ -7,7 +7,7 @@ from datetime import datetime
 from google.cloud.sql.connector import Connector
 from dotenv import load_dotenv
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "../genai-hackthon-472810-db799b456c6a.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./genai-hackthon-472810-db799b456c6a.json"
 
 connector = Connector()
 load_dotenv()

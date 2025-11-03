@@ -49,7 +49,7 @@ export function PersonalityEntryPage() {
                 </div>
                 <CardTitle className="text-xl">HEXACO Personality</CardTitle>
                 <CardDescription className="text-base">
-                  Assess your personality across six key dimensions: Honesty-Humility, Emotionality, eXtraversion, Agreeableness, Conscientiousness, and Openness to Experience.
+                  Assess your personality across six key dimensions: Honesty-Humility, Emotionality, Extraversion, Agreeableness, Conscientiousness, and Openness to Experience.
                 </CardDescription>
               </CardHeader>
               <CardContent>

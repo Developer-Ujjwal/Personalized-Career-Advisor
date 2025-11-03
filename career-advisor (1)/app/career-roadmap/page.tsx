@@ -72,7 +72,7 @@ export default function CareerRoadmapPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-center">Career Roadmap Generator</h1>
+      <h1 className="text-3xl font-bold mb-6 text-center mt-5">Career Roadmap Generator</h1>
       <InputForm onSubmit={handleGenerateRoadmap} loading={loading} />
 
       {loading && <p className="text-center mt-4">Generating roadmap...</p>}

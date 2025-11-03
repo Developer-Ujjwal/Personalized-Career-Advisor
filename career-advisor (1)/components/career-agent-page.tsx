@@ -391,10 +391,9 @@ export function CareerAgentPage() {
   }
 
   return (
-
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-64" : "w-0"} transition-all duration-300 border-r bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col`}>
+    <div className="h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-muted/20 to-accent/10 flex overflow-hidden">
+      {/* Sidebar - hidden by default on mobile */}
+      <div className={`${sidebarOpen ? "lg:w-64 w-full fixed lg:relative inset-0 z-30" : "w-0"} transition-all duration-300 border-r bg-card/50 backdrop-blur-sm overflow-hidden flex flex-col`}>
         <div className="p-4">
           <Button
             onClick={createNewConversation}
@@ -417,7 +416,13 @@ export function CareerAgentPage() {
               conversations.map((conv) => (
                 <button
                   key={conv.id}
-                  onClick={() => loadConversation(conv.id)}
+
+                  onClick={(e) => {
+                    loadConversation(conv.id);
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
+                  }}
                   className={`w-full text-left p-3 rounded-lg transition-all ${
                     currentConversationId === conv.id
                       ? "bg-primary text-primary-foreground"
@@ -438,11 +443,19 @@ export function CareerAgentPage() {
         </ScrollArea>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      {/* Overlay for mobile sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+  {/* Main Content */}
+  <div className="flex-1 flex flex-col">
         {/* Header */}
         <div className="border-b bg-card/50 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4">
+          <div className="container mx-auto px-4 py-3">
             <div className="flex items-center gap-3 justify-between">
               <div className="flex items-center gap-3">
                 <Button
@@ -467,17 +480,19 @@ export function CareerAgentPage() {
                 <Button
                   onClick={handleGenerateRecommendations}
                   disabled={isGeneratingRecommendations}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-sm lg:text-base px-2 lg:px-4"
                 >
                   {isGeneratingRecommendations ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Generating...
+                      <span className="hidden sm:inline">Generating...</span>
+                      <span className="sm:hidden">Gen...</span>
                     </>
                   ) : (
                     <>
                       <TrendingUp className="w-4 h-4 mr-2" />
-                      Generate Recommendations
+                      <span className="hidden sm:inline">Generate Recommendations</span>
+                      <span className="sm:hidden">Recommend</span>
                     </>
                   )}
                 </Button>
@@ -487,8 +502,8 @@ export function CareerAgentPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-1 container mx-auto px-4 py-6 max-w-5xl overflow-hidden flex flex-col">
-          <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+        <div className="flex-1 container mx-auto px-4 py-4 overflow-hidden flex flex-col">
+          <ScrollArea className="flex-1 pr-4 overflow-auto" ref={scrollAreaRef}>
             <div className="space-y-6">
               {messages.length === 0 && !isTyping && (
                 <div className="text-center py-12">
@@ -567,7 +582,7 @@ export function CareerAgentPage() {
                     {influenceBreakdown && (
                       <div className="mt-4 flex flex-col items-center">
                         <h3 className="text-lg font-semibold mb-2">Influence Breakdown</h3>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                           <div className="flex flex-col items-center">
                             <span className="font-medium">HEXACO</span>
                             <span className="text-primary font-bold">{influenceBreakdown.HEXACO ?? 0}%</span>
@@ -646,19 +661,19 @@ export function CareerAgentPage() {
 
           {/* Input Area */}
           {!showCareerOptions && (
-            <div className="mt-6 flex gap-3">
+            <div className="mt-4 flex gap-3 items-end" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
               <Input
                 value={currentInput}
                 onChange={(e) => setCurrentInput(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your response..."
-                className="flex-1 h-12 bg-card/50 backdrop-blur-md"
+                className="flex-1 h-12 bg-card/50 backdrop-blur-md mb-4"
                 disabled={isTyping || !currentConversationId}
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!currentInput.trim() || isTyping || !currentConversationId}
-                className="h-12 px-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300"
+                className="h-12 px-4 mb-4 lg:px-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300"
               >
                 <Send className="w-6 h-6" />
               </Button>

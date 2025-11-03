@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Sparkles, Target, Users } from "lucide-react"
+import { access } from "fs"
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -19,16 +20,49 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    const authEndpoint = isSignUp ? "/register" : "/token"
+    const body = isSignUp
+      ? JSON.stringify({ email, password, username: email })
+      : `username=${email}&password=${password}`
+    const headers = isSignUp
+      ? { "Content-Type": "application/json" }
+      : { "Content-Type": "application/x-www-form-urlencoded" }
+
     try {
-      // For demo purposes, we'll bypass the actual API call and simulate a successful login
-      console.log("Auth Request (Demo Mode):", { email, password, isSignUp })
-      
-      // Generate a mock token
-      const mockToken = "demo_" + Math.random().toString(36).substring(2, 15)
-      
-      // Store token in both localStorage and as a cookie for middleware access
-      localStorage.setItem("access_token", mockToken)
-      document.cookie = `access_token=${mockToken}; path=/; max-age=86400; SameSite=Lax`
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${authEndpoint}`, {
+        method: "POST",
+        headers,
+        body,
+      })
+      console.log("Auth Request:", { authEndpoint, headers, body })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      if (data.access_token) {
+        document.cookie = `access_token=${data.access_token}; path=/; max-age=86400; SameSite=Lax`
+        localStorage.setItem("access_token", data.access_token)
+        const urlParams = new URLSearchParams(window.location.search)
+        const callbackUrl = urlParams.get('callbackUrl') || '/personality-entry'
+        window.location.href = callbackUrl
+      } else if (isSignUp) {
+        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `username=${email}&password=${password}`,
+        })
+
+        if (!loginResponse.ok) {
+          const errorData = await loginResponse.json()
+          throw new Error(errorData.detail || `HTTP error! status: ${loginResponse.status}`)
+        }
+        const loginData = await loginResponse.json()
+        localStorage.setItem("access_token", loginData.access_token)
+        document.cookie = `access_token=${loginData.access_token}; path=/; max-age=86400; SameSite=Lax`
+
       
       // Get the callback URL from the query parameters or default to personality-entry
       const urlParams = new URLSearchParams(window.location.search)
@@ -36,6 +70,7 @@ export default function AuthPage() {
       
       // Redirect to the callback URL
       window.location.href = callbackUrl
+      }
       
     } catch (error) {
       console.error("Authentication error:", error)
@@ -72,7 +107,7 @@ export default function AuthPage() {
               <Target className="w-8 h-8 text-primary-foreground" />
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              CareerPath
+              Synapse
             </h1>
           </div>
           <p className="text-muted-foreground text-balance">Discover your perfect career with AI-powered guidance</p>

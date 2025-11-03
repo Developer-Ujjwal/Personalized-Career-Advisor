@@ -303,7 +303,7 @@ export function PersonalityQuizPage() {
                   {Object.entries(personalityResult.scores).map(([dimension, score]) => (
                     <div key={dimension} className="flex items-center justify-between">
                       <span className="capitalize font-medium">
-                        {dimension === "extraversion" ? "eXtraversion" : dimension}
+                        {dimension === "extraversion" ? "Extraversion" : dimension}
                       </span>
                       <div className="flex items-center gap-2">
                         <Progress value={(score / 5) * 100} className="w-24 h-2" />
@@ -326,12 +326,34 @@ export function PersonalityQuizPage() {
               </div>
 
               <div className="pt-4">
-                <Link href="/career-agent">
-                  <Button className="w-full h-12 text-base bg-purple-600 hover:bg-purple-700 transition-all duration-300 text-white shadow-lg">
-                    Continue to Career Agent
-                    <ArrowRight className="w-5 h-5 ml-2" />
+                <div className="w-full grid grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2"
+                    onClick={() => {
+                      setShowResult(false);
+                      setCurrentQuestion(0);
+                      setAnswers({});
+                    }}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Retake Test
                   </Button>
-                </Link>
+                  <Link href="/career-agent">
+                    <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
+                      Continue to Career Agent
+                      <ArrowRight className="ml-2 w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="pt-4">
+                  <Link href="/personality-entry">
+                    <Button variant="outline" className="w-full gap-2">
+                      <ArrowLeft className="w-4 h-4" />
+                      Back
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -387,47 +409,53 @@ export function PersonalityQuizPage() {
               </div>
               <div className="flex justify-between items-center gap-2">
                 {[1, 2, 3, 4, 5].map((value) => (
-                  <button
+                  <Button
                     key={value}
                     onClick={() => handleAnswer(currentQ.id, value)}
-                    className={`w-12 h-12 rounded-full border-2 transition-all duration-300 hover:scale-110 ${
-                      currentAnswer === value
-                        ? "bg-primary border-primary text-primary-foreground shadow-lg scale-110"
+                    variant={answers[currentQuestion] === value ? "default" : "outline"}
+                    className={`flex-1 py-3 text-base ${
+                      answers[currentQuestion] === value
+                        ? "bg-primary border-primary text-primary-foreground shadow-lg"
                         : "border-border hover:border-primary/50 bg-background"
                     }`}
                   >
-                    {value}
-                  </button>
+                    {value === 1 && "Strongly Disagree"}
+                    {value === 2 && "Disagree"}
+                    {value === 3 && "Neutral"}
+                    {value === 4 && "Agree"}
+                    {value === 5 && "Strongly Agree"}
+                  </Button>
                 ))}
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
               </div>
             </div>
 
             {/* Navigation */}
             <div className="flex justify-between pt-4">
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentQuestion === 0}
-                className="flex items-center gap-2 bg-transparent"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Previous
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!currentAnswer}
-                className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-              >
-                {currentQuestion === quizQuestions.length - 1 ? "Get Results" : "Next"}
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              <Link href="/personality-entry">
+                <Button variant="outline" className="gap-2">
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </Button>
+              </Link>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  disabled={currentQuestion === 0}
+                  className="flex items-center gap-2 bg-transparent"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                <Button
+                  onClick={handleNext}
+                  disabled={!currentAnswer}
+                  className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                >
+                  {currentQuestion === quizQuestions.length - 1 ? "Get Results" : "Next"}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

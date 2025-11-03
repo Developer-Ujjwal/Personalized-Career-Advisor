@@ -30,7 +30,7 @@ export function Navigation() {
     <>
       {/* Desktop Navigation */}
       <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden md:block">
-        <div className="bg-card/80 backdrop-blur-sm border rounded-full px-2 py-2 shadow-lg">
+        <div className="px-2 py-2 bg-card/95 backdrop-blur shadow-lg rounded-full">
           <div className="flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon

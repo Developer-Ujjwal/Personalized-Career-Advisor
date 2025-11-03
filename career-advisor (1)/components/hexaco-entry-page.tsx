@@ -224,9 +224,20 @@ export function HexacoEntryPage() {
                     <Button 
                       variant="outline" 
                       className="w-full gap-2"
+                      onClick={() => {
+                        setIsSuccess(false);
+                        setScores({
+                          honesty_humility: 50,
+                          emotionality: 50,
+                          extraversion: 50,
+                          agreeableness: 50,
+                          conscientiousness: 50,
+                          openness_to_experience: 50
+                        });
+                      }}
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      Back to Assessments
+                      Retake Test
                     </Button>
                   </Link>
                   <Link href="/career-agent">
