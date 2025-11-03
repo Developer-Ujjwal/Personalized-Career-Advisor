@@ -1,6 +1,7 @@
 "use client"; 
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 // This is the main component for your homepage
 const Home: React.FC = () => {
@@ -9,9 +10,16 @@ const Home: React.FC = () => {
     
     // State to track the currently active section for scroll-spy
     const [activeSection, setActiveSection] = useState<string>('');
+    
+    // State to track authentication status
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-    // Effect for handling the scroll-spy logic
+    // Effect for handling the scroll-spy logic and checking authentication
     useEffect(() => {
+        // Check if user is authenticated
+        const token = localStorage.getItem('access_token');
+        setIsAuthenticated(!!token);
+        
         // Find all sections that have an 'id'
         const sections = document.querySelectorAll('section[id]') as NodeListOf<HTMLElement>;
         
@@ -77,7 +85,15 @@ const Home: React.FC = () => {
                             <a href="#science" className={getNavLinkClass('science')}>Our Science</a>
                             <a href="#how" className={getNavLinkClass('how')}>How It Works</a>
                             <a href="#ethics" className={getNavLinkClass('ethics')}>Our Ethics</a>
-                            <a href="#cta" className="bg-blue-600 text-white px-3 sm:px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition-shadow shadow-md text-sm sm:text-base">Start Free Assessment</a>
+                            {isAuthenticated ? (
+                                <Link href="/personality-entry" className="bg-blue-600 text-white px-3 sm:px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition-shadow shadow-md text-sm sm:text-base">
+                                    Start Free Assessment
+                                </Link>
+                            ) : (
+                                <Link href="/auth?callbackUrl=/personality-entry" className="bg-blue-600 text-white px-3 sm:px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition-shadow shadow-md text-sm sm:text-base">
+                                    Start Free Assessment
+                                </Link>
+                            )}
                         </div>
                         {/* Mobile Menu Button */}
                         <button 
@@ -97,7 +113,15 @@ const Home: React.FC = () => {
                         <a href="#science" className={getMobileNavLinkClass('science')}>Our Science</a>
                         <a href="#how" className={getMobileNavLinkClass('how')}>How It Works</a>
                         <a href="#ethics" className={getMobileNavLinkClass('ethics')}>Our Ethics</a>
-                        <a href="#cta" className="block bg-blue-600 text-white text-center px-5 py-2 rounded-full font-medium hover:bg-blue-700 mt-2">Start Free Assessment</a>
+                        {isAuthenticated ? (
+                            <Link href="/personality-entry" className="block bg-blue-600 text-white text-center px-5 py-2 rounded-full font-medium hover:bg-blue-700 mt-2">
+                                Start Free Assessment
+                            </Link>
+                        ) : (
+                            <Link href="/auth?callbackUrl=/personality-entry" className="block bg-blue-600 text-white text-center px-5 py-2 rounded-full font-medium hover:bg-blue-700 mt-2">
+                                Start Free Assessment
+                            </Link>
+                        )}
                     </div>
                 </div>
             </header>
@@ -114,9 +138,15 @@ const Home: React.FC = () => {
                                 <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-gray-600 max-w-xl mx-auto md:mx-0">
                                     Project Synapse is India's first AI-powered career advisor built on the scientifically validated HEXACO and RIASEC models. Stop guessing, start planning.
                                 </p>
-                                <a href="#cta" className="mt-6 sm:mt-10 inline-block bg-blue-600 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                    Start Your Free Assessment
-                                </a>
+                                {isAuthenticated ? (
+                                    <Link href="/personality-entry" className="mt-6 sm:mt-10 inline-block bg-blue-600 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                        Start Your Free Assessment
+                                    </Link>
+                                ) : (
+                                    <Link href="/auth?callbackUrl=/personality-entry" className="mt-6 sm:mt-10 inline-block bg-blue-600 text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                        Start Your Free Assessment
+                                    </Link>
+                                )}
                             </div>
                             {/* Hero Visual */}
                             <div>

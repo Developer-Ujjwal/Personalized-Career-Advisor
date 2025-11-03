@@ -18,48 +18,25 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const authEndpoint = isSignUp ? "/register" : "/token"
-    const body = isSignUp
-      ? JSON.stringify({ email, password, username: email })
-      : `username=${email}&password=${password}`
-    const headers = isSignUp
-      ? { "Content-Type": "application/json" }
-      : { "Content-Type": "application/x-www-form-urlencoded" }
-
+    
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${authEndpoint}`, {
-        method: "POST",
-        headers,
-        body,
-      })
-      console.log("Auth Request:", { authEndpoint, headers, body })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      if (data.access_token) {
-        localStorage.setItem("access_token", data.access_token)
-        window.location.href = "/personality-entry"
-      } else if (isSignUp) {
-        // If it's a signup and no access_token, it means registration was successful, now log in
-        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `username=${email}&password=${password}`,
-        })
-
-        if (!loginResponse.ok) {
-          const errorData = await loginResponse.json()
-          throw new Error(errorData.detail || `HTTP error! status: ${loginResponse.status}`)
-        }
-        const loginData = await loginResponse.json()
-        localStorage.setItem("access_token", loginData.access_token)
-        window.location.href = "/personality-entry"
-      }
+      // For demo purposes, we'll bypass the actual API call and simulate a successful login
+      console.log("Auth Request (Demo Mode):", { email, password, isSignUp })
+      
+      // Generate a mock token
+      const mockToken = "demo_" + Math.random().toString(36).substring(2, 15)
+      
+      // Store token in both localStorage and as a cookie for middleware access
+      localStorage.setItem("access_token", mockToken)
+      document.cookie = `access_token=${mockToken}; path=/; max-age=86400; SameSite=Lax`
+      
+      // Get the callback URL from the query parameters or default to personality-entry
+      const urlParams = new URLSearchParams(window.location.search)
+      const callbackUrl = urlParams.get('callbackUrl') || '/personality-entry'
+      
+      // Redirect to the callback URL
+      window.location.href = callbackUrl
+      
     } catch (error) {
       console.error("Authentication error:", error)
       alert(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`)
