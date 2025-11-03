@@ -75,8 +75,22 @@ export default function CareerRoadmapPage() {
       <h1 className="text-3xl font-bold mb-6 text-center mt-5">Career Roadmap Generator</h1>
       <InputForm onSubmit={handleGenerateRoadmap} loading={loading} />
 
-      {loading && <p className="text-center mt-4">Generating roadmap...</p>}
-      {error && <p className="text-center mt-4 text-red-500">{error}</p>}
+      {loading && (
+        <div className="flex flex-col items-center justify-center mt-8 gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-primary border-solid rounded-full animate-spin border-t-transparent"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13v-6m0-6v6m0 6h6m-6 0H5.5a1.5 1.5 0 01-1.5-1.5v-1a1.5 1.5 0 011.5-1.5H9m6 0h1.5a1.5 1.5 0 011.5 1.5v1a1.5 1.5 0 01-1.5 1.5H15m-6 0V7m6 0V5.618a1 1 0 00-.553-.894L15 2m0 15l5.447-2.724A1 1 0 0021 16.382V5.618a1 1 0 00-1.447-.894L15 7" /></svg>
+            </div>
+          </div>
+          <p className="text-lg font-medium text-muted-foreground">Generating your career roadmap...</p>
+        </div>
+      )}
+      {error && (
+        <div className="text-center mt-8 p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+          <p className="text-destructive font-medium">{error}</p>
+        </div>
+      )}
 
       {roadmap && (
         <div className="mt-8">

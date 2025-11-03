@@ -98,8 +98,14 @@ class CareerGuidanceRouter:
         except jwt.PyJWTError:
             raise credentials_exception
 
-    async def generate_career_roadmap(self, career_start: str, career_goal: str) -> Roadmap:    
-        return await self.roadmap_agent.generate_career_roadmap(career_start,career_goal)
+    async def generate_career_roadmap(self, conversation_history: list | None, user_profile: dict | None, career_goal: str) -> Roadmap:
+        """Generate a career roadmap using conversation context and user profile when available.
+
+        conversation_history: raw conversation_history list from DB (may be None)
+        user_profile: dict containing extracted profile fields (may be None)
+        career_goal: target goal string provided by the user
+        """
+        return await self.roadmap_agent.generate_career_roadmap(conversation_history, user_profile, career_goal)
 
     async def get_roadmap_step_details(self, step_details_request: StepDetailsRequest) -> dict:
         return await self.roadmap_agent.get_roadmap_step_details(step_details_request.step, step_details_request.overall_goal)
@@ -254,9 +260,7 @@ class CareerGuidanceRouter:
                     "skills": [],
                     "personality_traits": [],
                     "values": [],
-                    "education_status": "",
-                    "current_grade": "",
-                    "field_of_study": "",
+                    "education":"",
                     "experience_level": "",
                     "dislikes": []
                 }
@@ -270,7 +274,7 @@ class CareerGuidanceRouter:
                             db_conversation.user_profile[key].extend(value)
                             profile_updated = True
                     elif isinstance(value, str) and value:
-                        if key in ["education_level", "experience_level", "education_status", "current_grade", "field_of_study"]:
+                        if key in ["education", "experience_level"]:
                             db_conversation.user_profile[key] = value
                             profile_updated = True
                         else:
@@ -329,9 +333,7 @@ class CareerGuidanceRouter:
                 "skills": [],
                 "personality_traits": [],
                 "values": [],
-                "education_status": "",
-                "current_grade": "",
-                "field_of_study": "",
+                "education": "",
                 "experience_level": "",
                 "dislikes": []
             },
@@ -599,22 +601,48 @@ async def read_users_me(current_user: User = Depends(career_router.get_current_u
 
 @app.post("/roadmap", response_model=Roadmap)
 async def generate_roadmap(request: RoadmapRequest, current_user: User = Depends(career_router.get_current_user), db: Session = Depends(get_db)):
-    # Generate roadmap
-    roadmap = await career_router.generate_career_roadmap(current_user.user_profile["education_level"], request.career_goal)
-    
-    # Save roadmap to database
+    """Generate a roadmap using conversation context when available.
+
+    If `request.conversation_id` is provided and belongs to the current user, use that
+    conversation's `conversation_history` and `user_profile`. Otherwise fall back to
+    the authenticated user's `user_profile`.
+    """
+    conversation_history = None
+    user_profile = current_user.user_profile or {}
+
+    if getattr(request, "conversation_id", None):
+        db_conversation = db.query(DBConversation).filter(
+            DBConversation.id == request.conversation_id,
+            DBConversation.user_id == current_user.id
+        ).first()
+        if db_conversation:
+            conversation_history = db_conversation.conversation_history or []
+            # prefer conversation-scoped user_profile if present
+            user_profile = db_conversation.user_profile or user_profile
+
+    # Generate roadmap using conversation history + user profile context
+    roadmap = await career_router.generate_career_roadmap(conversation_history, user_profile, request.career_goal)
+
+    # Persist roadmap; derive career_start from the profile if available
+    career_start = ""
+    try:
+        if isinstance(user_profile, dict):
+            career_start = user_profile.get("education_level", "") or user_profile.get("education", "")
+    except Exception:
+        career_start = ""
+
     db_roadmap = DBRoadmap(
         id=str(uuid.uuid4()),
         user_id=current_user.id,
         career_goal=request.career_goal,
-        career_start=current_user.user_profile["education_level"],
+        career_start=career_start,
         nodes=[node.model_dump() for node in roadmap.nodes],
         edges=[edge.model_dump() for edge in roadmap.edges]
     )
-    
+
     db.add(db_roadmap)
     db.commit()
-    
+
     return roadmap
 
 @app.get("/roadmap/step/{step_id}")
@@ -656,3 +684,24 @@ async def generate_recommendations(
     db: Session = Depends(get_db)
 ):
     return await career_router.generate_recommendations_for_conversation(conversation_id, current_user, db)
+
+@app.delete("/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: str,
+    current_user: User = Depends(career_router.get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Find the conversation
+    db_conversation = db.query(DBConversation).filter(
+        DBConversation.id == conversation_id,
+        DBConversation.user_id == current_user.id
+    ).first()
+    
+    if not db_conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Delete the conversation
+    db.delete(db_conversation)
+    db.commit()
+    
+    return {"message": "Conversation deleted successfully"}

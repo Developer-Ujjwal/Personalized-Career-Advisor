@@ -66,6 +66,7 @@ export function CareerAgentPage() {
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const [isGeneratingRecommendations, setIsGeneratingRecommendations] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,7 +110,10 @@ export function CareerAgentPage() {
     }
   }
 
+  const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
+
   const createNewConversation = async () => {
+    setIsCreatingNewChat(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations`, {
         method: "POST",
@@ -135,10 +139,13 @@ export function CareerAgentPage() {
       }
     } catch (error) {
       console.error("Error creating conversation:", error)
+    } finally {
+      setIsCreatingNewChat(false);
     }
   }
 
   const loadConversation = async (conversationId: string) => {
+    setIsLoadingConversation(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${conversationId}`, {
         method: "GET",
@@ -196,6 +203,8 @@ export function CareerAgentPage() {
       }
     } catch (error) {
       console.error("Error loading conversation:", error)
+    } finally {
+      setIsLoadingConversation(false)
     }
   }
 
@@ -355,7 +364,38 @@ export function CareerAgentPage() {
     }
   }
 
+  const [isLoadingRoadmap, setIsLoadingRoadmap] = useState(false);
+  const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
+
+  const handleDeleteConversation = async (conversationId: string) => {
+    if (!conversationId) return;
+    setIsDeletingConversation(conversationId);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      });
+
+      if (response.ok) {
+        setConversations((prev) => prev.filter((conv) => conv.id !== conversationId));
+        if (currentConversationId === conversationId) {
+          // If we deleted the current conversation, create a new one
+          createNewConversation();
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+    } finally {
+      setIsDeletingConversation(null);
+    }
+  };
+
   const handleViewRoadmap = async (careerName: string) => {
+    setIsLoadingRoadmap(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/roadmap`, {
         method: "POST",
@@ -374,6 +414,8 @@ export function CareerAgentPage() {
       window.location.href = `/career-roadmap?career=${encodeURIComponent(careerName)}`
     } catch (error) {
       console.error("Error generating roadmap:", error)
+    } finally {
+      setIsLoadingRoadmap(false);
     }
   }
 
@@ -397,10 +439,20 @@ export function CareerAgentPage() {
         <div className="p-4">
           <Button
             onClick={createNewConversation}
-            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            disabled={isCreatingNewChat}
+            className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Chat
+            {isCreatingNewChat ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4 mr-2" />
+                New Chat
+              </>
+            )}
           </Button>
         </div>
         
@@ -409,8 +461,11 @@ export function CareerAgentPage() {
         <ScrollArea className="flex-1 p-4">
           <div className="space-y-2">
             {isLoadingConversations ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  <p className="text-lg font-medium text-muted-foreground">Loading conversations...</p>
+                </div>
               </div>
             ) : (
               conversations.map((conv) => (
@@ -429,12 +484,42 @@ export function CareerAgentPage() {
                       : "bg-muted hover:bg-muted/80"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{conv.title}</p>
-                      <p className="text-xs opacity-70">{formatDate(conv.updated_at)}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{conv.title}</p>
+                        <p className="text-xs opacity-70">{formatDate(conv.updated_at)}</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteConversation(conv.id);
+                      }}
+                      disabled={isDeletingConversation === conv.id}
+                      className={`p-1.5 rounded-md transition-colors ${currentConversationId === conv.id ? 'hover:bg-primary-foreground/10 text-primary-foreground' : 'hover:bg-muted text-muted-foreground'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      {isDeletingConversation === conv.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      )}
+                    </button>
                   </div>
                 </button>
               ))
@@ -505,7 +590,14 @@ export function CareerAgentPage() {
         <div className="flex-1 container mx-auto px-4 py-4 overflow-hidden flex flex-col">
           <ScrollArea className="flex-1 pr-4 overflow-auto" ref={scrollAreaRef}>
             <div className="space-y-6">
-              {messages.length === 0 && !isTyping && (
+              {isLoadingConversation ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-xl font-medium text-muted-foreground">Loading conversation...</p>
+                  </div>
+                </div>
+              ) : messages.length === 0 && !isTyping && (
                 <div className="text-center py-12">
                   <Bot className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
                   <h2 className="text-2xl font-bold mb-2">Start a Conversation</h2>
@@ -644,10 +736,20 @@ export function CareerAgentPage() {
                           <div className="mt-4 text-right">
                             <button
                               onClick={() => handleViewRoadmap(career.career_name)}
-                              className="bg-primary text-white px-6 py-3 rounded-md shadow-md hover:shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2"
+                              disabled={isLoadingRoadmap}
+                              className="bg-primary text-white px-6 py-3 rounded-md shadow-md hover:shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100"
                             >
-                              View Roadmap
-                              <ExternalLink className="w-5 h-5 ml-2" />
+                              {isLoadingRoadmap ? (
+                                <>
+                                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                  Loading...
+                                </>
+                              ) : (
+                                <>
+                                  View Roadmap
+                                  <ExternalLink className="w-5 h-5 ml-2" />
+                                </>
+                              )}
                             </button>
                           </div>
                         </div>

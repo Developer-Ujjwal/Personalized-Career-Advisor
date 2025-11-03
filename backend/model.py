@@ -54,7 +54,7 @@ class User(BaseModel):
         "skills": [],
         "personality_traits": [],
         "values": [],
-        "education_level": "",
+        "education": "",
         "experience_level": "",
         "dislikes": []
     }
@@ -120,6 +120,9 @@ class Roadmap(BaseModel):
 
 class RoadmapRequest(BaseModel):
     career_goal: str
+    # Optional: provide a specific conversation id so the server can use the
+    # conversation history and any extracted user_profile when generating the roadmap
+    conversation_id: Optional[str] = None
 
 class StepDetailsRequest(BaseModel):
     step: RoadmapStep

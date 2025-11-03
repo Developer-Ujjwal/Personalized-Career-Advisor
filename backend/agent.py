@@ -36,52 +36,8 @@ class DynamicCareerGuidanceAgent:
     def generate_question(self, conversation_history: list, hexaco_scores: HexacoScores = None, holland_scores: HollandScores = None) -> str:
         """Generate a dynamic question based on conversation history using Gemini"""
         try:
-            # Extract what has been covered so far
-            covered_topics = []
-            user_responses = []
-            for item in conversation_history:
-                if isinstance(item, dict):
-                    if item.get("role") == "user" and item.get("parts"):
-                        user_responses.append(item["parts"][0])
-                    elif item.get("role") == "assistant" and item.get("parts"):
-                        # Check question content to infer topic
-                        question = item["parts"][0].lower()
-                        if any(word in question for word in ["education", "grade", "school", "study", "degree"]):
-                            covered_topics.append("education")
-                        if any(word in question for word in ["interest", "hobby", "enjoy", "like", "favorite"]):
-                            covered_topics.append("interests")
-                        if any(word in question for word in ["skill", "strength", "good at", "ability"]):
-                            covered_topics.append("skills")
-                        if any(word in question for word in ["environment", "team", "work", "prefer", "setting"]):
-                            covered_topics.append("work environment")
-                        if any(word in question for word in ["value", "important", "matter", "career"]):
-                            covered_topics.append("values")
-                        if any(word in question for word in ["goal", "aspiration", "future", "want"]):
-                            covered_topics.append("goals")
-            
-            # Determine what to ask next
-            topic_priority = [
-                ("education", "education status"),
-                ("interests", "interests and hobbies"),
-                ("skills", "skills and strengths"),
-                ("work environment", "work environment preferences"),
-                ("values", "values and priorities"),
-                ("goals", "career goals and aspirations")
-            ]
-            
-            next_topic = None
-            for topic, description in topic_priority:
-                if topic not in covered_topics:
-                    next_topic = description
-                    break
-            
-            if not next_topic:
-                # All basic topics covered, ask follow-up or deeper questions
-                next_topic = "any additional details that would help with career guidance"
-            
-            # Create enhanced prompt for question generation
             prompt_parts = [
-                "You are a friendly career guidance expert. Generate ONE simple, open-ended question to gather information about the user's profile.",
+                "You are a friendly career guidance expert. Generate ONE simple, open-ended question to gather information about the user's interests, skills, values and preferences, dislikes and many traits to help them find suitable careers.",
                 "",
                 "CRITICAL REQUIREMENTS:",
                 "1. The question MUST be OPEN-ENDED (use 'what', 'how', 'tell me', 'describe', 'share' - NEVER use yes/no questions)",
@@ -89,8 +45,6 @@ class DynamicCareerGuidanceAgent:
                 "3. Make it EASY to answer (someone should be able to respond in 2-3 sentences)",
                 "4. Use warm, conversational, and encouraging tone",
                 "5. Ask about ONE specific thing at a time",
-                "",
-                f"Topic to ask about: {next_topic}",
                 "",
                 "Conversation so far:",
             ]
@@ -180,10 +134,7 @@ class DynamicCareerGuidanceAgent:
                     "skills": {"type": "array", "items": {"type": "string"}},
                     "personality_traits": {"type": "array", "items": {"type": "string"}},
                     "values": {"type": "array", "items": {"type": "string"}},
-                    "education_status": {"type": "string"},
-                    "current_grade": {"type": "string"},
-                    "field_of_study": {"type": "string"},
-                    "education_level": {"type": "string"},
+                    "education": {"type": "string"},
                     "experience_level": {"type": "string"},
                     "dislikes": {"type": "array", "items": {"type": "string"}}
                 },
@@ -212,14 +163,8 @@ class DynamicCareerGuidanceAgent:
                     extracted_data["values"] = []
                 if "dislikes" not in extracted_data:
                     extracted_data["dislikes"] = []
-                if "education_status" not in extracted_data:
-                    extracted_data["education_status"] = ""
-                if "current_grade" not in extracted_data:
-                    extracted_data["current_grade"] = ""
-                if "field_of_study" not in extracted_data:
-                    extracted_data["field_of_study"] = ""
-                if "education_level" not in extracted_data:
-                    extracted_data["education_level"] = ""
+                if "education" not in extracted_data:
+                    extracted_data["education"] = ""
                 if "experience_level" not in extracted_data:
                     extracted_data["experience_level"] = ""
                 

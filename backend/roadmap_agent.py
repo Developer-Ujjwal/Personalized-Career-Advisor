@@ -6,13 +6,64 @@ class RoadmapAgent:
     def __init__(self):
         self.model = model
 
-    async def generate_career_roadmap(self, start: str, goal: str) -> Roadmap:
+    async def generate_career_roadmap(self, conversation_history: list | None, user_profile: dict | None, goal: str) -> Roadmap:
+        """Generate a career roadmap using conversation context and user profile when available.
+
+        conversation_history: list of conversation items (from DB) where each item is a dict with 'role' and 'parts'
+        user_profile: dict extracted from the conversation (may include education, field_of_study, experience_level, skills, interests)
+        goal: target career goal string
+        """
+        # Derive a sensible 'start' from the user profile if available
+        start = ""
+        try:
+            if isinstance(user_profile, dict):
+                # prefer explicit education_level, fallback to education or current_grade
+                start = user_profile.get("education_level") or user_profile.get("education") or user_profile.get("current_grade") or ""
+        except Exception:
+            start = ""
+
         if not start:
-            start = "10"
+            start = "Current position"  # friendly default
+
+        # Build conversation context string (recent exchanges) for the prompt
+        convo_context = ""
+        try:
+            if conversation_history and isinstance(conversation_history, list):
+                recent = conversation_history[-8:] if len(conversation_history) > 8 else conversation_history
+                parts = []
+                for item in recent:
+                    role = item.get("role", "")
+                    content = ""
+                    if item.get("parts") and isinstance(item.get("parts"), list) and len(item.get("parts")) > 0:
+                        content = item.get("parts")[0]
+                    if role and content:
+                        if role.lower() == "assistant":
+                            parts.append(f"Agent: {content}")
+                        elif role.lower() == "user":
+                            parts.append(f"User: {content}")
+                convo_context = "\n".join(parts)
+
+        except Exception:
+            convo_context = ""
+
+        # Include user_profile json for context
+        profile_json = "{}"
+        try:
+            if user_profile and isinstance(user_profile, dict):
+                profile_json = json.dumps(user_profile, indent=2)
+        except Exception:
+            profile_json = "{}"
+
         prompt = f"""
 You are an expert career roadmap generator creating a CONNECTED flowchart.
 Current position: "{start}"  
 Goal: "{goal}".  
+
+Conversation context (recent exchanges):
+{convo_context}
+
+User profile/context:
+{profile_json}
 
 Create a step-by-step roadmap with PROPERLY CONNECTED nodes showing the career progression path.
 
