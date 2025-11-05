@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Home, Brain, MessageSquare, Map, User, Menu, X } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -28,6 +29,10 @@ export function Navigation() {
 
   return (
     <>
+      {/* Fixed corner toggle on every page (except root) */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
       {/* Desktop Navigation */}
       <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden md:block">
         <div className="px-2 py-2 bg-card/95 backdrop-blur shadow-lg rounded-full">
@@ -108,6 +113,7 @@ export function Navigation() {
               <span className="text-xs mt-1">Profile</span>
             </Button>
           </Link>
+          {/* Theme toggle is shown in the fixed corner instead of here */}
         </div>
       </div>
     </>

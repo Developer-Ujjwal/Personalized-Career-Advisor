@@ -65,8 +65,14 @@ htmlcov/
 *.tmp
 *.temp
 
-
+.next
 
 .vercel
 
 genai-hackthon-472810-db799b456c6a.json
+genai-hackthon-472810-ab97940abacc.json
+
+# Docker
+.dockerignore
+
+.gcloudignore

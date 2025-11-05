@@ -160,7 +160,7 @@ export function PersonalityQuizPage() {
           return
         }
 
-        const response = await axios.get("http://127.0.0.1:8000/hexaco_scores", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/hexaco_scores`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -247,7 +247,7 @@ export function PersonalityQuizPage() {
       }
 
       await axios.post(
-        "http://127.0.0.1:8000/hexaco_scores",
+        `${process.env.NEXT_PUBLIC_API_URL}/hexaco_scores`,
         {
           honesty_humility: scores.honesty,
           emotionality: scores.emotionality,
@@ -329,7 +329,7 @@ export function PersonalityQuizPage() {
                 <div className="w-full grid grid-cols-2 gap-4">
                   <Button 
                     variant="outline" 
-                    className="w-full gap-2"
+                    className="w-full gap-2 dark:hover:text-pink-300"
                     onClick={() => {
                       setShowResult(false);
                       setCurrentQuestion(0);
@@ -348,7 +348,7 @@ export function PersonalityQuizPage() {
                 </div>
                 <div className="pt-4">
                   <Link href="/personality-entry">
-                    <Button variant="outline" className="w-full gap-2">
+                    <Button variant="outline" className="w-full gap-2 dark:hover:text-pink-300">
                       <ArrowLeft className="w-4 h-4" />
                       Back
                     </Button>
@@ -412,11 +412,11 @@ export function PersonalityQuizPage() {
                   <Button
                     key={value}
                     onClick={() => handleAnswer(currentQ.id, value)}
-                    variant={answers[currentQuestion] === value ? "default" : "outline"}
-                    className={`flex-1 py-3 text-base ${
-                      answers[currentQuestion] === value
-                        ? "bg-primary border-primary text-primary-foreground shadow-lg"
-                        : "border-border hover:border-primary/50 bg-background"
+                    variant={answers[currentQ.id] === value ? "default" : "outline"}
+                    className={`flex-1 py-3 text-base transition-all duration-200 ${
+                      answers[currentQ.id] === value
+                        ? "bg-primary border-primary text-primary-foreground shadow-lg scale-105"
+                        : "border-border hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-pink-300 bg-background"
                     }`}
                   >
                     {value === 1 && "Strongly Disagree"}
@@ -432,7 +432,10 @@ export function PersonalityQuizPage() {
             {/* Navigation */}
             <div className="flex justify-between pt-4">
               <Link href="/personality-entry">
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2 hover:text-primary dark:hover:text-pink-300 transition-colors"
+                >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </Button>
@@ -442,7 +445,7 @@ export function PersonalityQuizPage() {
                   variant="outline"
                   onClick={handlePrevious}
                   disabled={currentQuestion === 0}
-                  className="flex items-center gap-2 bg-transparent"
+                  className="flex items-center gap-2 bg-transparent hover:text-primary dark:hover:text-pink-300 transition-colors disabled:hover:text-muted-foreground"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Previous
@@ -450,7 +453,7 @@ export function PersonalityQuizPage() {
                 <Button
                   onClick={handleNext}
                   disabled={!currentAnswer}
-                  className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  className="flex items-center gap-2 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 hover:text-white dark:hover:text-white"
                 >
                   {currentQuestion === quizQuestions.length - 1 ? "Get Results" : "Next"}
                   <ArrowRight className="w-4 h-4" />

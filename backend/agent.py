@@ -279,6 +279,14 @@ Your ultimate goal is to gather enough context to create an accurate `user_profi
                     influence_breakdown = {"Interests": 100.0}
             
             # Build the prompt based on available assessment data
+            assessments = ""
+            if hexaco_scores:
+                assessments += "HEXACO Personality Assessment:\n" + hexaco_scores.model_dump_json()
+            if holland_scores:
+                if assessments:
+                    assessments += "\n"
+                assessments += "Holland RIASEC Career Interests:\n" + holland_scores.model_dump_json()
+
             prompt = f"""
 You are a highly analytical yet empathetic Career Advisor AI that recommends suitable career paths based on user data, personality assessments, and market trends.
 
@@ -291,8 +299,7 @@ Use the following structured information to reason:
 {json.dumps(influence_breakdown, indent=2)}
 
 ### Assessments:
-{f"HEXACO Personality Assessment:\n{hexaco_scores.model_dump_json()}" if hexaco_scores else ""}
-{f"Holland RIASEC Career Interests:\n{holland_scores.model_dump_json()}" if holland_scores else ""}
+{assessments}
 
 ### Market Demand & Trends:
 {json.dumps(trending_info, indent=2)}

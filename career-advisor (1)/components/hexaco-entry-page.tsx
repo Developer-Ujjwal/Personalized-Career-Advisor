@@ -62,7 +62,7 @@ export function HexacoEntryPage() {
       }
       
       // Send scores to backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
       await axios.post(`${apiUrl}/hexaco_scores`, normalizedScores, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -223,7 +223,7 @@ export function HexacoEntryPage() {
                   <Link href="/personality-entry">
                     <Button 
                       variant="outline" 
-                      className="w-full gap-2"
+                      className="w-full gap-2 dark:hover:text-pink-300"
                       onClick={() => {
                         setIsSuccess(false);
                         setScores({
@@ -237,7 +237,7 @@ export function HexacoEntryPage() {
                       }}
                     >
                       <ArrowLeft className="w-4 h-4" />
-                      Retake Test
+                      Back to Assessments
                     </Button>
                   </Link>
                   <Link href="/career-agent">
@@ -252,7 +252,7 @@ export function HexacoEntryPage() {
               ) : (
                 <>
                   <Link href="/personality-entry">
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2 dark:hover:text-pink-300">
                       <ArrowLeft className="w-4 h-4" />
                       Back
                     </Button>

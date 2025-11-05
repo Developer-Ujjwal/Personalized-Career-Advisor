@@ -75,7 +75,7 @@ export function HollandRiasecPage() {
           return;
         }
 
-        const response = await axios.get("http://127.0.0.1:8000/holland_scores", {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/holland_scores`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -158,7 +158,7 @@ export function HollandRiasecPage() {
       }
 
       await axios.post(
-        "http://127.0.0.1:8000/holland_scores",
+        `${process.env.NEXT_PUBLIC_API_URL}/holland_scores`,
         {
           realistic: scores.realistic,
           investigative: scores.investigative,
@@ -196,7 +196,9 @@ export function HollandRiasecPage() {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="p-4 bg-primary rounded-2xl animate-pulse-glow">
-                <CheckCircle className="w-10 h-10 text-primary-foreground" />
+                <span key="check-circle-wrapper">
+                  <CheckCircle className="w-10 h-10 text-primary-foreground" />
+                </span>
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Your Holland RIASEC Profile
@@ -221,7 +223,7 @@ export function HollandRiasecPage() {
                   ))}
                 </div>
               </div>
-              <div className="text-center pt-4">
+              <div className="pt-4">
                 <div className="w-full grid grid-cols-2 gap-4">
                   <Button 
                     onClick={() => {
@@ -230,29 +232,29 @@ export function HollandRiasecPage() {
                       setAnswers({});
                     }}
                     variant="outline" 
-                    className="w-full gap-2"
+                    className="w-full gap-2  dark:hover:text-blue-300"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" key="retake-arrow" />
                     Retake Test
                   </Button>
                   <Link href="/career-agent">
                     <Button className="w-full gap-2 bg-primary hover:bg-primary/90">
                       Continue to Career Agent
-                      <ArrowRight className="ml-2 w-4 h-4" />
+                      <ArrowRight className="ml-2 w-4 h-4" key="continue-arrow" />
                     </Button>
                   </Link>
                 </div>
-              </div>
-              <div className="text-center pt-4">
-                <Link href="/personality-entry">
-                  <Button 
-                    variant="outline" 
-                    className="w-full gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Back
-                  </Button>
-                </Link>
+                <div className="pt-4">
+                  <Link href="/personality-entry">
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-2  dark:hover:text-blue-300"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -294,10 +296,10 @@ export function HollandRiasecPage() {
                     key={value}
                     onClick={() => handleAnswer(value)}
                     variant={answers[currentQ.id] === value ? "default" : "outline"}
-                    className={`flex-1 py-3 text-base ${
+                    className={`flex-1 py-3 text-base transition-all duration-200 ${
                       answers[currentQ.id] === value
                         ? "bg-primary border-primary text-primary-foreground shadow-lg"
-                        : "border-border hover:border-primary/50 bg-background"
+                        : "border-border hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-blue-300 bg-background"
                     }`}
                   >
                     {value === 1 && "Strongly Disagree"}
@@ -311,18 +313,30 @@ export function HollandRiasecPage() {
             </div>
             <div className="flex justify-between mt-6">
               <Link href="/personality-entry">
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2 hover:text-primary dark:hover:text-blue-300 transition-colors"
+                >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </Button>
               </Link>
               <div className="flex gap-2">
-                <Button onClick={handlePrevious} disabled={currentQuestion === 0} variant="outline">
+                <Button 
+                  onClick={handlePrevious} 
+                  disabled={currentQuestion === 0} 
+                  variant="outline"
+                  className="hover:text-primary dark:hover:text-blue-300 transition-colors disabled:hover:text-muted-foreground"
+                >
                   <ArrowLeft className="w-4 h-4" />
                   Previous
                 </Button>
-                <Button onClick={handleNext} disabled={answers[currentQ.id] === undefined}>
-                  {currentQuestion === hollandQuestions.length - 1 ? "Finish" : "Next"}
+                <Button 
+                  onClick={handleNext} 
+                  disabled={answers[currentQ.id] === undefined}
+                  className="hover:text-white dark:hover:text-white transition-colors" >
+                  {currentQuestion === hollandQuestions.length - 1 ? "Finish" : "Next"} 
+                
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>

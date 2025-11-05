@@ -713,14 +713,14 @@ export function CareerAgentPage() {
                               <div className="flex items-center gap-1">
                                 <TrendingUp className="w-5 h-5" />
                                 <span className="text-sm">Required Skills/Education:</span>
-                                <span className="whitespace-normal max-w-full break-words bg-gray-200 px-2 py-1 rounded">
+                                <span className="whitespace-normal max-w-full break-words bg-gray-200 dark:bg-slate-800 text-foreground px-2 py-1 rounded">
                                   {career.required_skills_education}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <TrendingUp className="w-5 h-5" />
                                 <span className="text-sm">Potential Growth:</span>
-                                <span className="whitespace-normal max-w-full break-words bg-gray-200 px-2 py-1 rounded">
+                                <span className="whitespace-normal max-w-full break-words bg-gray-200 dark:bg-slate-800 text-foreground px-2 py-1 rounded">
                                   {career.potential_growth}
                                 </span>
                               </div>

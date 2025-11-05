@@ -62,7 +62,7 @@ export function HollandEntryPage() {
       }
       
       // Send scores to backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL
       await axios.post(`${apiUrl}/holland_scores`, normalizedScores, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -223,7 +223,7 @@ export function HollandEntryPage() {
                   <Link href="/personality-entry">
                     <Button 
                       variant="outline" 
-                      className="w-full gap-2"
+                      className="w-full gap-2  dark:hover:text-blue-300"
                     >
                       <ArrowLeft className="w-4 h-4" />
                       Back to Assessments
@@ -241,7 +241,7 @@ export function HollandEntryPage() {
               ) : (
                 <>
                   <Link href="/personality-entry">
-                    <Button variant="outline" className="gap-2">
+                    <Button variant="outline" className="gap-2  dark:hover:text-blue-300">
                       <ArrowLeft className="w-4 h-4" />
                       Back
                     </Button>

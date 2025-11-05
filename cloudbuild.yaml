@@ -1,0 +1,63 @@
+serviceAccount: projects/genai-hackthon-472810/serviceAccounts/cloudbuild-deployer-synapse@genai-hackthon-472810.iam.gserviceaccount.com
+
+options:
+  logging: 'CLOUD_LOGGING_ONLY'
+
+steps:
+  # 1️⃣ Build and push Career Advisor image
+  - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'NEXT_PUBLIC_API_URL=https://api.synapse.neurofox.live'
+    args: [
+      'build', '-t', 'gcr.io/genai-hackthon-472810/career-advisor:latest',
+      '--build-arg', 'NEXT_PUBLIC_API_URL=https://api.synapse.neurofox.live',
+      './career-advisor (1)'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 'gcr.io/genai-hackthon-472810/career-advisor:latest'
+    ]
+
+  # 2️⃣ Build and push Backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', '-t', 'gcr.io/genai-hackthon-472810/backend:latest',
+      './backend'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 'gcr.io/genai-hackthon-472810/backend:latest'
+    ]
+
+  # 3️⃣ SSH into VM, pull latest images, and restart services
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        echo "🚀 Authenticating as Cloud Build service account..."
+        gcloud auth activate-service-account cloudbuild-deployer-synapse@genai-hackthon-472810.iam.gserviceaccount.com \
+          --key-file=genai-hackthon-472810-ab97940abacc.json
+
+        echo "🔐 Setting project..."
+        gcloud config set project genai-hackthon-472810
+
+        echo "🚀 Deploying to VM..."
+        gcloud compute ssh sarthak8385@synapse \
+          --project=genai-hackthon-472810 \
+          --zone=asia-south1-a \
+          --command='
+            sudo su - sarthak8385
+            cd ~/GenAI_Hackthon/Personalized-Career-Advisor/ || exit 1
+            echo "🔐 Authenticating Docker to GCR..."
+            gcloud auth configure-docker us-docker.pkg.dev
+            echo "🧩 Pulling latest Docker images..."
+            docker pull us-docker.pkg.dev/genai-hackthon-472810/gcr.io/career-advisor:latest
+            docker pull us-docker.pkg.dev/genai-hackthon-472810/gcr.io/backend:latest
+            echo "♻️ Restarting Docker containers..."
+            sudo docker compose down || true
+            sudo docker compose up -d --build
+            echo "✅ Deployment complete!"
+          '

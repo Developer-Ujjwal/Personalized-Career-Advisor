@@ -4,9 +4,27 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Award, BookOpen, Target, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { cookies } from "next/headers"
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
+  const router = useRouter()
+
+  const handleLogout = () => {
+    // Remove the auth token from localStorage
+    localStorage.removeItem("access_token")
+    
+    // Remove all cookies
+    document.cookie.split(";").forEach(cookie => {
+      const eqPos = cookie.indexOf("=")
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim()
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/"
+    })
+    
+    // Redirect to auth page
+    router.push("/auth")
+  }
 
   // Mock user data - in a real app, this would come from a database/auth service
   const userProfile = {
@@ -31,13 +49,13 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 pt-16 sm:pt-20 md:pt-24 pb-12">
+  <div className="min-h-screen bg-background text-foreground transition-colors pt-16 sm:pt-20 md:pt-24 pb-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-4 sm:mb-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg mx-auto sm:mx-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-foreground text-2xl sm:text-3xl font-bold shadow-lg mx-auto sm:mx-0">
                 {userProfile.name
                   .split(" ")
                   .map((n) => n[0])
@@ -76,13 +94,13 @@ export function ProfilePage() {
         </div>
 
         {/* Bio Section */}
-        <Card className="p-6 mb-8 bg-white/50 backdrop-blur border-purple-200">
+        <Card className="p-6 mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-3">About</h2>
           <p className="text-muted-foreground leading-relaxed">{userProfile.bio}</p>
         </Card>
 
         {/* HEXACO Profile */}
-        <Card className="p-6 mb-8 bg-white/50 backdrop-blur border-purple-200">
+        <Card className="p-6 mb-8">
           <h2 className="text-xl font-semibold text-foreground mb-4">HEXACO Personality Profile</h2>
           <div className="space-y-4">
             {Object.entries(userProfile.hexacoProfile).map(([trait, score]) => (
@@ -103,12 +121,12 @@ export function ProfilePage() {
                   </label>
                   <span className="text-sm font-semibold text-purple-600">{score}/10</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                    style={{ width: `${(score / 10) * 100}%` }}
-                  />
-                </div>
+                      <div className="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                          style={{ width: `${(score / 10) * 100}%` }}
+                        />
+                      </div>
               </div>
             ))}
           </div>
@@ -117,14 +135,14 @@ export function ProfilePage() {
         {/* Learning Progress */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           {/* Completed Courses */}
-          <Card className="p-6 bg-white/50 backdrop-blur border-green-200">
+          <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <Award className="w-6 h-6 text-green-500" />
               <h3 className="text-lg font-semibold text-foreground">Completed Courses</h3>
             </div>
             <div className="space-y-2">
               {userProfile.completedCourses.map((course) => (
-                <div key={course} className="p-3 bg-green-50 rounded-lg text-sm text-green-700 border border-green-200">
+                <div key={course} className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-700 dark:text-green-200 border border-green-200 dark:border-green-800">
                   ✓ {course}
                 </div>
               ))}
@@ -132,14 +150,14 @@ export function ProfilePage() {
           </Card>
 
           {/* In Progress Courses */}
-          <Card className="p-6 bg-white/50 backdrop-blur border-blue-200">
+          <Card className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <BookOpen className="w-6 h-6 text-blue-500" />
               <h3 className="text-lg font-semibold text-foreground">In Progress</h3>
             </div>
             <div className="space-y-2">
               {userProfile.inProgressCourses.map((course) => (
-                <div key={course} className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700 border border-blue-200">
+                <div key={course} className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-sm text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
                   → {course}
                 </div>
               ))}
@@ -151,7 +169,8 @@ export function ProfilePage() {
         <div className="flex justify-center">
           <Button
             variant="outline"
-            className="rounded-full gap-2 text-red-600 border-red-200 hover:bg-red-50 bg-transparent"
+            className="rounded-full gap-2 text-red-600 border-red-200 hover:bg-red-50 dark:hover:bg-red-950 dark:border-red-900 bg-transparent transition-colors"
+            onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
             Logout

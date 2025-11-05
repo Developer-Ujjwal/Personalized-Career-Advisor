@@ -57,7 +57,7 @@ export function PersonalityEntryPage() {
                   <Link href="/personality-quiz">
                     <Button
                       variant="outline"
-                      className="w-full h-12 text-base border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 group bg-transparent"
+                      className="w-full h-12 text-base border-2 border-primary text-primary hover:bg-primary hover:text-white dark:hover:text-white transition-all duration-300 group bg-transparent"
                     >
                       Take HEXACO Quiz
                       <Brain className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
@@ -89,7 +89,7 @@ export function PersonalityEntryPage() {
                   <Link href="/holland-riasec">
                     <Button
                       variant="outline"
-                      className="w-full h-12 text-base border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground transition-all duration-300 group bg-transparent"
+                      className="w-full h-12 text-base border-2 border-accent text-accent hover:bg-accent hover:text-white dark:hover:text-white transition-all duration-300 group bg-transparent"
                     >
                       Take RIASEC Quiz
                       <HelpCircle className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
