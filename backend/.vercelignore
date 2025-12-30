@@ -1,0 +1,8 @@
+research/
+models/
+*.ipynb
+__pycache__/
+.venv/
+.env
+.git
+.gitignore

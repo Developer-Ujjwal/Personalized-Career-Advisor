@@ -3,7 +3,6 @@ from model import Profile, CareerRecommendationsResponse, CareerKeywordsResponse
 import json
 import random
 from setup import model
-from trends import CareerTrendAnalyzer
 
 
 class DynamicCareerGuidanceAgent:
@@ -44,8 +43,6 @@ After every user response:
 
 Your ultimate goal is to gather enough context to create an accurate `user_profile` for personalized, research-backed career recommendations.
 """
-
-        self.trend_analyzer = CareerTrendAnalyzer()
 
     def generate_question(self, conversation_history: list, hexaco_scores: HexacoScores = None, holland_scores: HollandScores = None) -> str:
         """Generate a dynamic question based on conversation history using Gemini"""
@@ -232,9 +229,6 @@ Your ultimate goal is to gather enough context to create an accurate `user_profi
             print(f"User Profile: {user_profile}")
             print(f"HEXACO scores: {hexaco_scores}")
             print(f"Holland RIASEC scores: {holland_scores}")
-            career_keywords = self.extract_career_keywords(user_profile)
-            trending_info = self.trend_analyzer.analyze_career_demand(career_keywords) 
-            print(trending_info)
             
             # Calculate influence breakdown
             influence_breakdown = {}
@@ -301,9 +295,6 @@ Use the following structured information to reason:
 ### Assessments:
 {assessments}
 
-### Market Demand & Trends:
-{json.dumps(trending_info, indent=2)}
-
 ---
 
 ### Your Task:
@@ -311,7 +302,7 @@ Suggest **3–5 personalized career paths** that:
 1. **Match the user’s skills, interests, and education**
 2. **Align with their personality traits and Holland RIASEC type**
 3. **Fit their values and preferred work environment**
-4. **Reflect realistic and in-demand opportunities (based on trend data)**
+4. **Reflect realistic and in-demand opportunities**
 
 Ensure recommendations are **holistic, personalized, and backed by clear reasoning** connecting the user's psychological and practical profile.
 """

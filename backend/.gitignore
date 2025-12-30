@@ -1,0 +1,66 @@
+.vercel
+# Python
+__pycache__/
+__init__.py
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.pyc
+*.pkl
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+*.out
+*.err
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.swo
+*.bak
+
+# MacOS
+*.DS_Store
+
+# Coverage / Reports
+coverage/
+htmlcov/
+*.lcov
+
+# Compiled
+*.class
+*.o
+*.so
+*.dll
+*.exe
+*.out
+
+# Other
+*.tmp
+*.temp
+
+.next
+
+.vercel
+
+# Docker
+.dockerignore
+research
+
+.gcloudignore

@@ -705,3 +705,7 @@ async def delete_conversation(
     db.commit()
     
     return {"message": "Conversation deleted successfully"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "OK"}

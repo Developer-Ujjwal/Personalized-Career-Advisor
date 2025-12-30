@@ -4,40 +4,16 @@ from sqlalchemy import Column, String, Float, ForeignKey, Text, JSON, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from datetime import datetime
-from google.cloud.sql.connector import Connector
 from dotenv import load_dotenv
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./genai-hackthon-472810-db799b456c6a.json"
-
-connector = Connector()
 load_dotenv()
 
 def getconn():
-    instance_connection_name = os.getenv("CLOUD_SQL_CONNECTION_NAME")
-    if not instance_connection_name:
-        raise RuntimeError(
-            "CLOUD_SQL_CONNECTION_NAME env var not set. Expected format 'project:region:instance'."
-        )
-    db_user = os.getenv("DB_USER", "postgres")
-    db_pass = os.getenv("DB_PASS", "")
-    db_name = os.getenv("DB_NAME", "postgres")
-    conn = connector.connect(
-        instance_connection_name,
-        "pg8000",
-        user=db_user,
-        password=db_pass,
-        db=db_name,
-        ip_type="public"
-    )
-    return conn
+    url = os.getenv("DATABASE_URL")
+    return url
 
-def close_connector():
-    global connector
-    if connector is not None:
-        connector.close()
 
-engine = sqlalchemy.create_engine("postgresql+pg8000://", creator=getconn)
-    
+engine = sqlalchemy.create_engine(getconn())
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
