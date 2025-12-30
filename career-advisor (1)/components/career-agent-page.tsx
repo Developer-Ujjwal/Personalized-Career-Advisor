@@ -77,10 +77,12 @@ export function CareerAgentPage() {
 
   // Load conversations on mount
   useEffect(() => {
-    loadConversations()
+    const controller = new AbortController()
+    loadConversations(controller.signal)
+    return () => controller.abort()
   }, [])
 
-  const loadConversations = async () => {
+  const loadConversations = async (signal?: AbortSignal) => {
     setIsLoadingConversations(true)
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations`, {
@@ -89,6 +91,7 @@ export function CareerAgentPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
+        signal,
       })
       if (response.ok) {
         const data = await response.json()
@@ -101,7 +104,8 @@ export function CareerAgentPage() {
           createNewConversation()
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.name === 'AbortError') return
       console.error("Error loading conversations:", error)
       // Create a new conversation if loading fails
       createNewConversation()
